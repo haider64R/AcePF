@@ -18,6 +18,7 @@ Clang's AST tooling was evaluated (https://clang.llvm.org/docs/Tooling.html). It
 * Memory: typed allocations with identity, lifetime and bounds. Pointers identify an allocation plus element offset, never a host address.
 * Events: append-only records with source location, operation, explanation and detached state. Playback never re-executes a past operation.
 * Educational trace: derives reasoning groups, explanations and deltas from raw events and source syntax. It does not execute expressions or synthesize machine state.
+* Content domain: canonical PF topics, scope ceilings, questions, example metadata, Notes structure, selectors and validation. It is independent of execution.
 * Playback: keeps an authoritative raw-event boundary while exposing grouped or raw indices.
 * UI: consumes the selected snapshot and educational description. It cannot decide what a C++ operation means.
 
@@ -55,7 +56,12 @@ Each milestone adds regression and interaction tests, runs the complete suite, c
 | src/trace/playback.js | Detail modes and exact snapshot boundary navigation |
 | src/ui/dry-run.js | Reasoning cards, expression details, raw list and reached loop history |
 | src/ui/app.js | Editor interactions, playback controls and eight snapshot views |
-| src/ui/examples.js / challenges.js | Educational source fixtures |
+| src/ui/examples.js / challenges.js | Compatibility re-export and shared-bank Challenge selector |
+| src/content/taxonomy.js / scopes.js | Ordered topic tree and reusable syllabus rules |
+| src/content/questions.js / examples.js / notes.js | Canonical content records; examples retain existing programs |
+| src/content/selectors.js / validate.js / index.js | Shared queries, early validation and public content entry point |
+
+Challenge Mode selects compatible, verified prediction records tagged `challenge` from the shared question bank. Its existing dialog still compares the authored answer and loads the record's source into the Visualizer. Future Notes, Exam Mode and past-paper browsing should consume the same topic IDs and question records through selectors. [CONTENT_MODEL.md](CONTENT_MODEL.md) defines the schema and authoring rules.
 
 ## Error handling and resource ownership
 

@@ -6,7 +6,7 @@ import {
   loopHistory,
 } from "./dry-run.js";
 import { challenges } from "./challenges.js";
-import { examples } from "./examples.js";
+import { examples } from "../content/index.js";
 import { format, label, bytes } from "../engine/types.js";
 const $ = (s) => document.querySelector(s),
   esc = (s) =>
@@ -698,7 +698,7 @@ function showChallenge() {
   const c = challenges[challengeIndex];
   $("#challenge-title").textContent = c.title;
   $("#challenge-question").textContent = c.question;
-  $("#challenge-code").textContent = c.code;
+  $("#challenge-code").textContent = c.code ?? c.files?.["main.cpp"] ?? "";
   $("#prediction").value = "";
   $("#challenge-feedback").textContent = "";
 }
@@ -721,11 +721,11 @@ $("#reveal-challenge").onclick = () => {
   if (dirty && !confirm("Replace your edited source with this challenge?"))
     return;
   const c = challenges[challengeIndex];
-  files = { "main.cpp": c.code };
+  files = c.files ? { ...c.files } : { "main.cpp": c.code };
   activeFile = "main.cpp";
   title = c.title;
-  virtualFiles = {};
-  $("#stdin").value = "";
+  virtualFiles = { ...(c.virtualFiles ?? {}) };
+  $("#stdin").value = c.standardInput ?? "";
   $("#description").textContent = c.question;
   $("#challenge-dialog").close();
   fileTabs();

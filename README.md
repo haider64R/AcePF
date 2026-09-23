@@ -50,10 +50,12 @@ Your source project and supplied input are saved in this browser's local storage
 
 Start with [LEARNING.md](LEARNING.md) for a progressive explanation. [ARCHITECTURE.md](ARCHITECTURE.md) maps the code. [TESTING.md](TESTING.md) records validation and its limits. [docs/MILESTONES.md](docs/MILESTONES.md) records milestone checks and corrections.
 
+The shared Programming Fundamentals content foundation is documented in [CONTENT_MODEL.md](CONTENT_MODEL.md). It supplies canonical topics, syllabus ceilings, question and Notes records, example metadata, queries and validation for future learning areas. The current Challenge dialog reads its three prediction questions from that bank.
+
 ## Static hosting
 
 `npm run build` copies only browser application files and the language contract to `dist/`. Serve that folder with any ordinary static host over HTTP(S); opening `index.html` with `file://` does not support module workers consistently. There is no backend to deploy. The included server binds only to localhost and is intended for local development.
 
 ## Dry Run verification
 
-The nested-loop acceptance program produces **68**, with **430 raw events → 68 reasoning steps (84.2% fewer)**. Grouping preserves each raw event and its snapshot. The final suite passes 147 tests (107 original plus 40 new), with no failures or skips; the original 35 native C++17 comparisons and four additional acceptance comparisons all match. Run `node scripts/trace-report.js` to reproduce the four acceptance trace counts. See [TESTING.md](TESTING.md) for browser coverage and limits.
+The nested-loop acceptance program produces **68**, with **430 raw events → 68 reasoning steps (84.2% fewer)**. Grouping preserves each raw event and its snapshot. The Visualizer V2 baseline was 147 tests (107 original plus 40 trace tests). The shared content foundation adds 14 focused tests, bringing the suite to **161 passing tests**, with no failures or skips. The original 35 native C++17 comparisons and four additional acceptance comparisons still match. Run `node scripts/trace-report.js` to reproduce the four acceptance trace counts. See [TESTING.md](TESTING.md) for browser coverage and limits.
