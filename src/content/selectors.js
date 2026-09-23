@@ -37,6 +37,21 @@ function checkFilters(filters) {
     typeof filters.visualizerCompatible !== "boolean"
   )
     throw new Error("Visualizer filter must be a boolean.");
+  if (
+    filters.autoGradable !== undefined &&
+    typeof filters.autoGradable !== "boolean"
+  )
+    throw new Error("Auto-gradability filter must be a boolean.");
+  if (
+    filters.verification &&
+    ![
+      "execution-verified",
+      "answer-reviewed",
+      "source-only",
+      "manual-review",
+    ].includes(filters.verification)
+  )
+    throw new Error("Unknown verification filter.");
 }
 
 function topicMatch(
@@ -73,6 +88,9 @@ export function queryQuestions(filters = {}, bank = questionBank) {
       (filters.year === undefined || q.source.year === filters.year) &&
       (filters.visualizerCompatible === undefined ||
         q.visualizer.compatible === filters.visualizerCompatible) &&
+      (filters.autoGradable === undefined ||
+        q.autoGradable === filters.autoGradable) &&
+      (!filters.verification || q.verification === filters.verification) &&
       (!filters.status || q.status === filters.status) &&
       (!filters.tag || q.tags?.includes(filters.tag)),
   );

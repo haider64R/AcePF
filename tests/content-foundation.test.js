@@ -28,6 +28,8 @@ import {
 
 const clone = (value) => structuredClone(value);
 const ids = (records) => records.map((record) => record.id);
+const authoredQuestions = questions.filter((q) => q.source.type === "authored");
+const authoredQuery = (filters) => queryQuestions(filters, authoredQuestions);
 
 test("taxonomy has ten ordered categories and unique, valid three-level IDs", () => {
   assert.equal(categories.length, 10);
@@ -106,7 +108,7 @@ test("custom course rule can include and exclude topic branches without naming a
 
 test("earliest stage is derived from all tags rather than duplicated on questions", () => {
   assert.deepEqual(
-    questions.map((q) => earliestCoreScope(q.topics)),
+    authoredQuestions.map((q) => earliestCoreScope(q.topics)),
     ["through-operators", "through-functions", "through-pointers"],
   );
   assert.throws(() => earliestCoreScope(["fake.topic"]), /Unknown topic/);
@@ -205,12 +207,16 @@ test("multiple-choice and code-reasoning records use the same schema", () => {
 test("past-paper claims require traceable metadata; authored items cannot impersonate them", () => {
   const paper = clone(questions[0]);
   paper.id = "paper-example";
+  paper.autoGradable = true;
+  paper.verification = "execution-verified";
   paper.source = {
     type: "past-paper",
     name: "University archive",
     year: 2024,
     assessment: "Final",
     paper: "PF",
+    document: "Archive.pdf",
+    page: 3,
     questionNumber: "2(a)",
     reference: "Archive document page 3",
     marks: 4,
@@ -235,24 +241,24 @@ test("past-paper claims require traceable metadata; authored items cannot impers
 });
 
 test("question selectors combine hierarchy, stages, difficulty, type and compatibility", () => {
-  assert.deepEqual(ids(queryQuestions({ topicId: "pointers.arithmetic" })), [
+  assert.deepEqual(ids(authoredQuery({ topicId: "pointers.arithmetic" })), [
     "follow-the-array",
   ]);
   assert.deepEqual(
     ids(
-      queryQuestions({
+      authoredQuery({
         topicIds: ["functions", "operators"],
         topicMatch: "all",
       }),
     ),
     ["through-the-reference"],
   );
-  assert.deepEqual(ids(queryQuestions({ scopeId: "through-operators" })), [
+  assert.deepEqual(ids(authoredQuery({ scopeId: "through-operators" })), [
     "postfix-puzzle",
   ]);
   assert.deepEqual(
     ids(
-      queryQuestions({
+      authoredQuery({
         scopeId: "through-functions",
         difficulty: "medium",
         type: "predict-value",
@@ -262,9 +268,9 @@ test("question selectors combine hierarchy, stages, difficulty, type and compati
     ),
     ["through-the-reference"],
   );
-  assert.deepEqual(ids(queryQuestions({ sourceType: "past-paper" })), []);
+  assert.ok(queryQuestions({ sourceType: "past-paper" }).length > 0);
   assert.deepEqual(
-    ids(queryQuestions({ topicIds: ["functions", "pointers"] })),
+    ids(authoredQuery({ topicIds: ["functions", "pointers"] })),
     ["through-the-reference", "follow-the-array"],
   );
   assert.throws(
@@ -274,7 +280,7 @@ test("question selectors combine hierarchy, stages, difficulty, type and compati
 });
 
 test("scope filtering checks every tag, including advanced secondary topics", () => {
-  assert.deepEqual(ids(queryQuestions({ scopeId: "through-arrays" })), [
+  assert.deepEqual(ids(authoredQuery({ scopeId: "through-arrays" })), [
     "postfix-puzzle",
     "through-the-reference",
   ]);
@@ -284,14 +290,14 @@ test("scope filtering checks every tag, including advanced secondary topics", ()
     throughCategoryId: "loops",
     includeTopicIds: ["functions.parameters.by-reference"],
   };
-  assert.deepEqual(ids(queryQuestions({ scopeId: custom })), [
+  assert.deepEqual(ids(authoredQuery({ scopeId: custom })), [
     "postfix-puzzle",
     "through-the-reference",
   ]);
 });
 
 test("all existing challenges come from canonical question records and retain answers", () => {
-  assert.deepEqual(ids(challenges), ids(questions));
+  assert.deepEqual(ids(challenges), ids(authoredQuestions));
   assert.deepEqual(
     challenges.map((c) => [c.title, c.question, c.answer]),
     [
@@ -308,7 +314,7 @@ test("all existing challenges come from canonical question records and retain an
     const run = runProject({ "main.cpp": question.code });
     assert.equal(run.ok, true);
     assert.equal(run.state.output.trim(), question.answer);
-    assert.ok(questions.includes(question));
+    assert.ok(authoredQuestions.includes(question));
   }
 });
 
@@ -333,22 +339,26 @@ test("existing examples retain source and gain valid canonical concepts", () => 
 });
 
 test("notes model validates structured blocks and cross-content references", () => {
-  assert.deepEqual(notes, []);
+  assert.equal(notes.length, 3);
   const note = {
     id: "pointer-note",
     topicId: "pointers.arithmetic",
     title: "Pointer arithmetic",
+    lead: "Offsets count elements.",
     sections: [
       {
         kind: "overview",
+        title: "Overview",
         blocks: [{ type: "paragraph", text: "Offsets count elements." }],
       },
       {
         kind: "syntax",
+        title: "Syntax",
         blocks: [{ type: "code", text: "int* p = a + 1;", language: "cpp" }],
       },
       {
         kind: "common-mistakes",
+        title: "Common mistakes",
         blocks: [{ type: "list", items: ["Treating offsets as bytes"] }],
       },
     ],

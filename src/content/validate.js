@@ -9,8 +9,18 @@ export const questionTypes = Object.freeze([
   "identify-error",
   "multiple-choice",
   "code-reasoning",
+  "code-writing",
+  "code-completion",
+  "short-answer",
+  "flowchart",
+  "pseudocode",
 ]);
-export const sourceTypes = Object.freeze(["authored", "past-paper", "example"]);
+export const sourceTypes = Object.freeze([
+  "authored",
+  "past-paper",
+  "practice",
+  "example",
+]);
 export const noteSectionKinds = Object.freeze([
   "overview",
   "syntax",
@@ -19,6 +29,8 @@ export const noteSectionKinds = Object.freeze([
   "common-mistakes",
   "exam-traps",
   "worked-example",
+  "execution-model",
+  "quick-revision",
 ]);
 const slug = /^[a-z][a-z0-9-]*$/;
 const fail = (message) => {
@@ -120,24 +132,46 @@ export function validateQuestion(question) {
   if (!question.source || !sourceTypes.includes(question.source.type))
     fail(`Question ${id} needs a valid source type.`);
   const source = question.source;
-  if (source.type === "past-paper") {
+  if (["past-paper", "practice"].includes(source.type)) {
     if (
       !string(source.name) ||
-      !Number.isInteger(source.year) ||
-      source.year < 1900 ||
-      source.year > 2100 ||
-      !string(source.assessment) ||
-      !string(source.paper) ||
+      (source.year !== undefined &&
+        (!Number.isInteger(source.year) ||
+          source.year < 1900 ||
+          source.year > 2100)) ||
+      (source.type === "past-paper" && !string(source.assessment)) ||
+      !string(source.document) ||
+      !Number.isInteger(source.page) ||
+      source.page < 1 ||
       !string(source.questionNumber) ||
       !string(source.reference)
     )
       fail(
-        `Past-paper question ${id} needs source name, year, assessment, paper, question number and verifiable reference.`,
+        `Sourced question ${id} needs source name, document, page, question number and verifiable reference.`,
       );
-  } else if (
-    ["year", "assessment", "paper", "questionNumber", "reference"].some(
-      (key) => source[key] !== undefined,
+    if (
+      source.references !== undefined &&
+      (!Array.isArray(source.references) ||
+        !source.references.every(
+          (ref) =>
+            string(ref.document) &&
+            Number.isInteger(ref.page) &&
+            ref.page > 0 &&
+            string(ref.questionNumber),
+        ))
     )
+      fail(`Question ${id} has invalid duplicate references.`);
+  } else if (
+    [
+      "year",
+      "assessment",
+      "paper",
+      "document",
+      "page",
+      "questionNumber",
+      "reference",
+      "references",
+    ].some((key) => source[key] !== undefined)
   )
     fail(
       `Question ${id} cannot carry past-paper metadata with source type ${source.type}.`,
@@ -149,6 +183,33 @@ export function validateQuestion(question) {
       source.marks <= 0)
   )
     fail(`Question ${id} has invalid marks.`);
+  if (
+    question.autoGradable !== undefined &&
+    typeof question.autoGradable !== "boolean"
+  )
+    fail(`Question ${id} has invalid autoGradable metadata.`);
+  if (["past-paper", "practice"].includes(source.type)) {
+    if (typeof question.autoGradable !== "boolean")
+      fail(`Sourced question ${id} needs autoGradable metadata.`);
+    if (
+      ![
+        "execution-verified",
+        "answer-reviewed",
+        "source-only",
+        "manual-review",
+      ].includes(question.verification)
+    )
+      fail(`Sourced question ${id} needs verification status.`);
+    if (question.autoGradable && question.verification === "manual-review")
+      fail(`Question ${id} cannot auto-grade while awaiting manual review.`);
+    if (
+      question.verification === "execution-verified" &&
+      (!question.visualizer?.compatible || !string(question.answer))
+    )
+      fail(
+        `Execution-verified question ${id} needs Visualizer compatibility and answer.`,
+      );
+  }
   if (
     !question.visualizer ||
     typeof question.visualizer.compatible !== "boolean"
@@ -234,6 +295,110 @@ export function validateQuestion(question) {
   return true;
 }
 
+export function validateAssessmentCorpus(sources, profiles, importedQuestions) {
+  unique(
+    sources.map((source) => source.document),
+    "assessment document",
+  );
+  const byDocument = new Map(
+    sources.map((source) => [source.document, source]),
+  );
+  for (const source of sources) {
+    if (
+      !string(source.document) ||
+      !["exam", "practice", "duplicate-file"].includes(source.kind) ||
+      !Number.isInteger(source.pages) ||
+      source.pages < 1
+    )
+      fail(`Invalid assessment source ${source.document}.`);
+    if (
+      source.kind === "duplicate-file" &&
+      (!string(source.duplicateOf) ||
+        source.duplicateOf === source.document ||
+        !byDocument.has(source.duplicateOf))
+    )
+      fail(`Invalid duplicate source ${source.document}.`);
+  }
+  for (const question of importedQuestions) {
+    validateQuestion(question);
+    const source = byDocument.get(question.source.document);
+    if (
+      !source ||
+      source.kind === "duplicate-file" ||
+      question.source.page > source.pages ||
+      (source.kind === "exam") !== (question.source.type === "past-paper")
+    )
+      fail(
+        `Question ${question.id} has inconsistent source inventory metadata.`,
+      );
+    if (source.year !== undefined && source.year !== question.source.year)
+      fail(`Question ${question.id} has inconsistent source year.`);
+    if (
+      source.assessment !== question.source.assessment &&
+      source.kind === "exam"
+    )
+      fail(`Question ${question.id} has inconsistent assessment.`);
+    for (const ref of question.source.references ?? []) {
+      const other = byDocument.get(ref.document);
+      if (
+        !other ||
+        other.kind !== "exam" ||
+        ref.page > other.pages ||
+        ref.document === source.document
+      )
+        fail(
+          `Question ${question.id} has invalid additional source reference.`,
+        );
+    }
+  }
+  unique(
+    profiles.map((profile) => profile.id),
+    "assessment profile ID",
+  );
+  for (const profile of profiles) {
+    if (
+      !slug.test(profile.id) ||
+      !string(profile.assessment) ||
+      !Array.isArray(profile.observedScope) ||
+      !profile.observedScope.every((id) => getTopic(id)?.kind === "category")
+    )
+      fail(`Invalid assessment profile ${profile.id}.`);
+    if (
+      profile.sourceCount !==
+      sources.filter(
+        (source) =>
+          source.kind === "exam" && source.assessment === profile.assessment,
+      ).length
+    )
+      fail(`Assessment profile ${profile.id} has wrong source count.`);
+    if (
+      !Array.isArray(profile.paperEvidence) ||
+      profile.paperEvidence.length !== profile.sourceCount
+    )
+      fail(`Assessment profile ${profile.id} needs evidence for each source.`);
+    unique(
+      profile.paperEvidence.map((item) => item.document),
+      `source in profile ${profile.id}`,
+    );
+    for (const item of profile.paperEvidence) {
+      const source = byDocument.get(item.document);
+      if (
+        !source ||
+        source.kind !== "exam" ||
+        source.assessment !== profile.assessment ||
+        !string(item.note) ||
+        !item.marks ||
+        typeof item.marks !== "object" ||
+        Object.values(item.marks).some(
+          (value) => !Number.isInteger(value) || value < 1,
+        )
+      )
+        fail(`Assessment profile ${profile.id} has invalid paper evidence.`);
+    }
+  }
+  return true;
+}
+
 export function validateQuestions(questions) {
   unique(
     questions.map((question) => question.id),
@@ -275,9 +440,15 @@ export function validateNotes(notes, { questions = [], examples = [] } = {}) {
   const questionIds = new Set(questions.map((question) => question.id));
   const exampleIds = new Set(examples.map((example) => example.id));
   for (const note of notes) {
-    if (!slug.test(note.id) || !getTopic(note.topicId) || !string(note.title))
+    const sampleIds = [];
+    if (
+      !slug.test(note.id) ||
+      !getTopic(note.topicId) ||
+      !string(note.title) ||
+      !string(note.lead)
+    )
       fail(`Invalid note ${note.id} or topic reference.`);
-    if (!Array.isArray(note.sections))
+    if (!Array.isArray(note.sections) || !note.sections.length)
       fail(`Note ${note.id} needs structured sections.`);
     unique(
       note.sections.map((section) => section.kind),
@@ -286,20 +457,54 @@ export function validateNotes(notes, { questions = [], examples = [] } = {}) {
     for (const section of note.sections) {
       if (
         !noteSectionKinds.includes(section.kind) ||
-        !Array.isArray(section.blocks)
+        !string(section.title) ||
+        !Array.isArray(section.blocks) ||
+        !section.blocks.length
       )
         fail(`Invalid section in note ${note.id}.`);
       for (const block of section.blocks) {
-        if (
-          !["paragraph", "code", "list"].includes(block.type) ||
-          (block.type === "list" &&
-            (!Array.isArray(block.items) ||
-              block.items.some((item) => !string(item)))) ||
-          (block.type !== "list" && !string(block.text))
-        )
-          fail(`Invalid content block in note ${note.id}.`);
+        const words = (values) =>
+          Array.isArray(values) && values.length > 0 && values.every(string);
+        const rows = (value) =>
+          Array.isArray(value) &&
+          value.length > 0 &&
+          value.every(
+            (row) =>
+              Array.isArray(row) &&
+              row.length === value[0].length &&
+              row.every(string),
+          );
+        const valid =
+          (["paragraph", "code"].includes(block.type) && string(block.text)) ||
+          (block.type === "list" && words(block.items)) ||
+          (block.type === "table" &&
+            words(block.headers) &&
+            rows(block.rows) &&
+            block.rows.every((row) => row.length === block.headers.length)) ||
+          (block.type === "steps" && words(block.items)) ||
+          (block.type === "comparison" &&
+            string(block.left?.label) &&
+            string(block.left?.text) &&
+            string(block.right?.label) &&
+            string(block.right?.text)) ||
+          (block.type === "memory" &&
+            words(block.pointers) &&
+            string(block.target?.name) &&
+            string(block.target?.value)) ||
+          (block.type === "callout" &&
+            string(block.text) &&
+            ["tip", "trap"].includes(block.tone));
+        if (!valid) fail(`Invalid content block in note ${note.id}.`);
+        if (block.caption !== undefined && !string(block.caption))
+          fail(`Invalid caption in note ${note.id}.`);
+        if (block.type === "code" && block.sampleId) {
+          if (!slug.test(block.sampleId) || block.language !== "cpp")
+            fail(`Invalid Visualizer sample in note ${note.id}.`);
+          sampleIds.push(block.sampleId);
+        }
       }
     }
+    unique(sampleIds, `Visualizer sample in ${note.id}`);
     for (const [key, known] of [
       ["relatedTopics", new Set(topics.map((topic) => topic.id))],
       ["relatedQuestions", questionIds],

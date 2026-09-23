@@ -26,6 +26,8 @@ The native differential test uses **only curated/generated test fixtures**, in a
 
 ## Use
 
+Open [Notes](notes.html) for native field guides on Operators & Expressions, Loops and Pointers. Each guide teaches a manual trace, then links runnable examples to the same Visualizer. The other seven curriculum categories are mapped as planned, not presented as completed lessons. See [NOTES_AUTHORING.md](NOTES_AUTHORING.md) for the content standard.
+
 1. Choose an example, or edit `main.cpp`. Add `.h` and `.cpp` files with the plus button.
 2. Supply a whitespace-separated transcript in Standard input when using `cin`.
 3. Run program. A worker produces a bounded recording; execution does not continue while you edit.
@@ -40,7 +42,7 @@ Your source project and supplied input are saved in this browser's local storage
 
 ## What is here
 
-* 15 examples across all requested learning topics, including a three-file header example.
+* Three structured Notes guides with eleven runnable teaching samples, plus 15 Visualizer examples across the existing topics.
 * All eight visualization views, a syntax-highlighted editor, source mapping, reversible playback and console.
 * A pure educational trace layer above unchanged raw events: statement deltas, expression explanations, loop phases and iteration history. Detail switching does not run the program or change its current state.
 * Static subset validation plus runtime type, bounds, lifetime, const and resource checks.
@@ -50,7 +52,9 @@ Your source project and supplied input are saved in this browser's local storage
 
 Start with [LEARNING.md](LEARNING.md) for a progressive explanation. [ARCHITECTURE.md](ARCHITECTURE.md) maps the code. [TESTING.md](TESTING.md) records validation and its limits. [docs/MILESTONES.md](docs/MILESTONES.md) records milestone checks and corrections.
 
-The shared Programming Fundamentals content foundation is documented in [CONTENT_MODEL.md](CONTENT_MODEL.md). It supplies canonical topics, syllabus ceilings, question and Notes records, example metadata, queries and validation for future learning areas. The current Challenge dialog reads its three prediction questions from that bank.
+The shared Programming Fundamentals content foundation is documented in [CONTENT_MODEL.md](CONTENT_MODEL.md). It supplies canonical topics, syllabus ceilings, questions, Notes records, example metadata, queries and validation. The Challenge dialog and Notes related-practice links read the same question bank.
+
+The curated [assessment corpus](ASSESSMENT_CORPUS.md) adds 29 traceable questions from supplied FAST exams and practice PDFs to that same bank, with a 14-file source inventory, evidence-based assessment profiles, explicit auto-grading and Visualizer compatibility, and native C++17 answer checks. It does not add an exam or past-paper interface.
 
 ## Static hosting
 
@@ -58,4 +62,4 @@ The shared Programming Fundamentals content foundation is documented in [CONTENT
 
 ## Dry Run verification
 
-The nested-loop acceptance program produces **68**, with **430 raw events → 68 reasoning steps (84.2% fewer)**. Grouping preserves each raw event and its snapshot. The Visualizer V2 baseline was 147 tests (107 original plus 40 trace tests). The shared content foundation adds 14 focused tests, bringing the suite to **161 passing tests**, with no failures or skips. The original 35 native C++17 comparisons and four additional acceptance comparisons still match. Run `node scripts/trace-report.js` to reproduce the four acceptance trace counts. See [TESTING.md](TESTING.md) for browser coverage and limits.
+The nested-loop acceptance program produces **68**, with **430 raw events → 68 reasoning steps (84.2% fewer)**. Grouping preserves each raw event and its snapshot. Run `node scripts/trace-report.js` to reproduce the trace counts. See [TESTING.md](TESTING.md) for current suite results, native comparisons, browser coverage and limits.

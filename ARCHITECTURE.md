@@ -59,9 +59,19 @@ Each milestone adds regression and interaction tests, runs the complete suite, c
 | src/ui/examples.js / challenges.js | Compatibility re-export and shared-bank Challenge selector |
 | src/content/taxonomy.js / scopes.js | Ordered topic tree and reusable syllabus rules |
 | src/content/questions.js / examples.js / notes.js | Canonical content records; examples retain existing programs |
+| src/content/assessment-corpus.js / assessment-sources.js | Sourced question records, all-PDF inventory and evidence-bound assessment profiles |
 | src/content/selectors.js / validate.js / index.js | Shared queries, early validation and public content entry point |
+| src/content/notes-routing.js | Stable note/sample and example/question URL resolution for Visualizer handoff |
+| src/ui/notes-render.js / notes-ui.js / notes.css | Pure structured-block renderer, Notes page navigation/search and responsive styles |
+| notes.html | Native Notes page shell; built alongside index.html |
 
 Challenge Mode selects compatible, verified prediction records tagged `challenge` from the shared question bank. Its existing dialog still compares the authored answer and loads the record's source into the Visualizer. Future Notes, Exam Mode and past-paper browsing should consume the same topic IDs and question records through selectors. [CONTENT_MODEL.md](CONTENT_MODEL.md) defines the schema and authoring rules.
+
+The assessment corpus is data in this content domain, not an execution layer. Each sourced record maps to a PDF page and question part. `autoGradable`, `verification`, and `visualizer.compatible` distinguish deterministic scoring, answer confidence, and current interpreter support. `validateAssessmentCorpus` checks source inventory consistency and assessment profiles before the app starts; [ASSESSMENT_CORPUS.md](ASSESSMENT_CORPUS.md) records observed patterns and omissions.
+
+Notes V1 is a separate consumer of that content layer. `notes.html?topic=<canonical-id>` resolves one authored guide; the landing page shows the ten-category map and searches the three authored guides client-side. `notes-render.js` escapes all text and renders reusable paragraph, list, procedure, code, table, comparison, callout and conceptual-memory blocks. Tables and code scroll inside their own container at narrow widths. Examples and verified Challenges are queried by the guide's canonical topic, with primary matches ranked first and a short related list. Empty states are explicit.
+
+Runnable code blocks have stable `sampleId`s. An Open in Visualizer URL contains only note/sample IDs; `notes-routing.js` resolves them to exact checked-in source. The existing app loads that source into its normal worker and playback without altering engine or trace semantics. The initial linked preview does not overwrite the user's saved project until they edit or explicitly run it. Challenge links select and open the existing prediction dialog. [NOTES_AUTHORING.md](NOTES_AUTHORING.md) defines the authoring and specialized-block extension contract.
 
 ## Error handling and resource ownership
 

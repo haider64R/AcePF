@@ -1,6 +1,8 @@
 import { examples } from "./examples.js";
 import { notes } from "./notes.js";
 import { questions } from "./questions.js";
+import { assessmentQuestions } from "./assessment-corpus.js";
+import { assessmentSources, assessmentProfiles } from "./assessment-sources.js";
 import { categories, topics, getTopic } from "./taxonomy.js";
 import { coreScopes, resolveScope, earliestCoreScope } from "./scopes.js";
 import {
@@ -15,6 +17,7 @@ import {
   validateQuestions,
   validateExamples,
   validateNotes,
+  validateAssessmentCorpus,
 } from "./validate.js";
 
 // Importing this public domain entry point fails early if checked-in content
@@ -22,6 +25,11 @@ import {
 validateTaxonomy();
 validateScopes();
 validateQuestions(questions);
+validateAssessmentCorpus(
+  assessmentSources,
+  assessmentProfiles,
+  assessmentQuestions,
+);
 validateExamples(examples);
 validateNotes(notes, { questions, examples });
 
@@ -33,6 +41,9 @@ export {
   resolveScope,
   earliestCoreScope,
   questions,
+  assessmentQuestions,
+  assessmentSources,
+  assessmentProfiles,
   examples,
   notes,
   queryQuestions,

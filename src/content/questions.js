@@ -1,7 +1,8 @@
 import { validateQuestions } from "./validate.js";
+import { assessmentQuestions } from "./assessment-corpus.js";
 
-// This is the only authored question bank. Challenge Mode selects from it;
-// Notes, a future past-paper browser and Exam Mode can use the same records.
+// This is the single canonical question bank. Challenge Mode selects its
+// authored records; later assessment products can select sourced records too.
 export const questions = [
   {
     id: "postfix-puzzle",
@@ -62,6 +63,7 @@ export const questions = [
     visualizer: { compatible: true },
     tags: ["challenge"],
   },
+  ...assessmentQuestions,
 ];
 
 validateQuestions(questions);

@@ -7,6 +7,7 @@ import {
 } from "./dry-run.js";
 import { challenges } from "./challenges.js";
 import { examples } from "../content/index.js";
+import { visualizerTarget } from "../content/notes-routing.js";
 import { format, label, bytes } from "../engine/types.js";
 const $ = (s) => document.querySelector(s),
   esc = (s) =>
@@ -74,6 +75,7 @@ const tabs = [
 ];
 $("#app").innerHTML =
   `<header class="topbar"><a class="brand" href="./index.html" aria-label="C++ Execution Visualizer"><span class="brand-icon">C<span>++</span></span><span>Execution<span class="brand-muted"> Visualizer</span></span></a><span class="course">PROGRAMMING FUNDAMENTALS</span><button id="help" class="quiet">Supported C++ ↗</button><button id="challenge" class="quiet">◇ Challenge</button><button id="examples" class="quiet">▤ Examples</button></header><main><div class="workspace-heading"><div><span class="eyebrow">YOUR WORKSPACE</span><h1 id="project-title"></h1><p id="description">Explore what happens between one line and the next.</p></div><button id="run" class="primary">▶ Run program <kbd>⌘ ↵</kbd></button></div><section class="workspace"><section class="editor-panel" aria-label="Source editor"><div class="panel-top"><div id="file-tabs"></div><button id="add-file" class="icon-button" aria-label="Add source file">＋</button></div><div class="editor-wrap"><div id="line-numbers" aria-hidden="true"></div><div class="code-wrap"><pre id="highlight" aria-hidden="true"></pre><textarea id="editor" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="C++ source code" wrap="off"></textarea></div></div><div class="editor-footer"><span>C++17 · Educational subset</span><span id="source-position">main.cpp</span></div><label class="input-label" for="stdin">STANDARD INPUT <span>Values for cin, separated by spaces</span></label><textarea id="stdin" placeholder="e.g. 12 3" rows="2"></textarea></section><section class="visual-panel" aria-label="Execution visualization"><div class="visual-heading"><span>INSIDE THE PROGRAM</span><label class="follow"><input type="checkbox" id="follow" checked> Follow execution</label></div><div class="detail-toolbar"><label for="detail-mode">Detail level</label><select id="detail-mode"><option value="dry">Dry Run</option><option value="expression">Expression Details</option><option value="raw">Detailed Trace</option></select><span id="trace-count"></span></div><nav id="view-tabs" aria-label="Visualization views"></nav><div id="visual-content"></div><div class="explanation"><div class="explanation-heading"><span id="event-label">READY</span><button id="why" class="quiet">Why?</button></div><p id="event-message" aria-live="polite"></p><p id="why-detail" hidden></p></div></section></section><section class="playback" aria-label="Playback controls"><button id="restart" class="icon-button" title="Restart" aria-label="Restart">↺</button><button id="previous" class="icon-button" title="Previous step" aria-label="Previous step">‹</button><button id="play" class="play-button" aria-label="Auto play">▶</button><button id="next" class="icon-button" title="Next step" aria-label="Next step">›</button><button id="statement" class="quiet">Next statement ⇥</button><div class="progress-wrap"><input id="timeline" aria-label="Execution timeline" type="range" min="0" max="0" value="0"><span id="step-label"></span></div><label class="speed-label">Speed <select id="speed"><option value="1400">0.5×</option><option value="700" selected>1×</option><option value="350">2×</option><option value="100">5×</option></select></label></section><section class="console-panel"><div class="console-heading"><span>CONSOLE <span class="muted">standard output</span></span><span id="run-status"></span></div><pre id="console-output" aria-live="polite"></pre></section><footer><span><span class="tiny-mark">{ }</span> See the code. Understand the execution.</span><span>Local execution · No AI guesses · Virtual memory</span></footer></main><dialog id="challenge-dialog"><div class="dialog-heading"><div><span class="eyebrow">PREDICT · THEN EXPLORE</span><h2 id="challenge-title"></h2></div><button id="close-challenge" class="icon-button" aria-label="Close challenge">×</button></div><p id="challenge-question"></p><pre id="challenge-code" class="large-console"></pre><label for="prediction">Your prediction</label><input id="prediction" autocomplete="off"><p id="challenge-feedback" aria-live="polite"></p><div class="dialog-actions"><button id="another-challenge">Another challenge</button><button id="check-prediction">Check answer</button><button id="reveal-challenge" class="primary">Reveal visualization</button></div></dialog><dialog id="library"><div class="dialog-heading"><div><span class="eyebrow">LEARN BY EXPLORING</span><h2>One concept at a time.</h2></div><button class="icon-button" id="close-library" aria-label="Close examples">×</button></div><div id="example-list"></div></dialog><dialog id="help-dialog"><div class="dialog-heading"><h2>A small, explicit C++ subset</h2><button class="icon-button" id="close-help" aria-label="Close help">×</button></div><div id="help-content"></div></dialog><dialog id="file-dialog"><form method="dialog"><h2>Add a source file</h2><label for="filename">File name (.cpp or .h)</label><input id="filename" pattern="[A-Za-z_][A-Za-z0-9_]*\.(cpp|h)" required placeholder="math.h"><p id="file-error"></p><div class="dialog-actions"><button value="cancel" formnovalidate>Cancel</button><button id="create-file" class="primary" value="create">Create file</button></div></form></dialog>`;
+$(".course").insertAdjacentHTML("afterend", '<a class="quiet notes-link" href="./notes.html">▤ Notes</a>');
 function saveProject() {
   try {
     localStorage.setItem(
@@ -441,8 +443,8 @@ function advance() {
   }
 }
 
-function run() {
-  saveProject();
+function run(save = true) {
+  if (save) saveProject();
   pause();
   worker?.terminate();
   worker = new Worker(new URL("../engine/worker.js", import.meta.url), {
@@ -752,6 +754,22 @@ try {
     virtualFiles = saved.virtualFiles ?? {};
   }
 } catch {}
+const preview = visualizerTarget(location.search);
+if (preview) {
+  files = preview.files ? { ...preview.files } : { "main.cpp": preview.code };
+  activeFile = "main.cpp";
+  title = preview.title;
+  $("#description").textContent = preview.description;
+  $("#stdin").value = preview.input ?? "";
+  virtualFiles = { ...(preview.virtualFiles ?? {}) };
+}
 fileTabs();
 render();
-run();
+run(!preview);
+const challengeId = new URLSearchParams(location.search).get("challenge");
+const linkedChallengeIndex = challenges.findIndex((item) => item.id === challengeId);
+if (linkedChallengeIndex >= 0) {
+  challengeIndex = linkedChallengeIndex;
+  showChallenge();
+  $("#challenge-dialog").showModal();
+}
