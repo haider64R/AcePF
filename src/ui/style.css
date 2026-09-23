@@ -1150,3 +1150,239 @@ dialog::backdrop {
     font-size: 10px;
   }
 }
+
+/* Educational playback: one reasoning card, optional detail, reached history. */
+.detail-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+.detail-toolbar select {
+  max-width: 180px;
+  padding: 6px 9px;
+  background: #192331;
+  color: #e3eaf4;
+  border: 1px solid #354151;
+  border-radius: 6px;
+}
+#trace-count {
+  margin-left: auto;
+  color: #92a0b5;
+  font-size: 11px;
+}
+.reasoning-card {
+  padding: 4px 0 16px;
+  min-width: 0;
+}
+.reasoning-card h2 {
+  font-size: 19px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  margin: 12px 0;
+}
+.reasoning-card code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.reason-why {
+  line-height: 1.7;
+  color: #c7d3e4;
+}
+.context-chips,
+.operand-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 12px 0;
+}
+.context-chips span,
+.operand-values code {
+  background: #1a2939;
+  border: 1px solid #2e4258;
+  border-radius: 5px;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+.phase-path {
+  font-size: 12px;
+  color: #80cfbd;
+}
+.calculation {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 14px;
+  background: #152d2d;
+  color: #8ce2c6;
+  border-left: 3px solid #72d7b6;
+  border-radius: 4px;
+  font-size: 14px;
+}
+.delta-table {
+  border: 1px solid #304052;
+  border-radius: 7px;
+  overflow: hidden;
+  margin: 14px 0;
+}
+.delta-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  padding: 9px 12px;
+  border-bottom: 1px solid #263443;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.delta-row:last-child {
+  border: 0;
+}
+.delta-row strong {
+  color: #88ddbe;
+}
+.delta-row > span {
+  color: #a6b3c7;
+}
+.delta-heading {
+  font-size: 11px;
+  background: #1c2836;
+}
+.reason-note {
+  font-size: 13px;
+  border-left: 2px solid #9287d1;
+  padding-left: 12px;
+  line-height: 1.6;
+}
+.raw-boundary {
+  display: block;
+  margin-top: 15px;
+  color: #8493a8;
+  font-size: 11px;
+}
+.details-toggle,
+.loop-history,
+.step-context {
+  border-top: 1px solid #304052;
+  margin-top: 15px;
+  padding-top: 13px;
+}
+.details-toggle summary,
+.loop-history summary,
+.step-context summary {
+  cursor: pointer;
+  color: #8fcec6;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.reason-detail {
+  display: flex;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid #263443;
+  font-size: 13px;
+}
+.reason-detail > span {
+  color: #72cbb2;
+  font-size: 11px;
+  padding-top: 3px;
+}
+.reason-detail > div {
+  min-width: 0;
+}
+.reason-detail p {
+  color: #aebcd0;
+  line-height: 1.65;
+  margin: 6px 0;
+}
+.reason-detail pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: #89d4bd;
+}
+.expression-details > .muted {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.raw-event {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  width: 100%;
+  padding: 10px;
+  margin: 5px 0;
+  background: #182433;
+  border: 1px solid #2d3c4e;
+  border-radius: 5px;
+  overflow-wrap: anywhere;
+}
+.raw-event span {
+  font-size: 11px;
+  color: #93a2b9;
+}
+.raw-event code {
+  white-space: pre-wrap;
+}
+.raw-event.selected {
+  border-color: #7ad3b6;
+  background: #17362f;
+}
+.iteration-row {
+  padding: 10px 0;
+  border-bottom: 1px solid #2d3c4e;
+}
+.iteration-row summary {
+  display: grid;
+  gap: 3px;
+}
+.iteration-row summary span {
+  font-size: 11px;
+  color: #9caac0;
+}
+.iteration-row em {
+  font-style: normal;
+  color: #d1bc8e;
+}
+.iteration-steps button {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: left;
+  width: 100%;
+  padding: 10px;
+  background: #172331;
+  border: 1px solid #2c3b4e;
+  margin-top: 6px;
+  border-radius: 5px;
+}
+.iteration-steps button span {
+  font-size: 12px;
+  color: #a3b3c7;
+}
+.iteration-steps code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 650px) {
+  .detail-toolbar {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  #trace-count {
+    width: 100%;
+    margin-left: 0;
+  }
+  .reasoning-card h2 {
+    font-size: 16px;
+  }
+  .delta-row {
+    font-size: 12px;
+    padding: 8px;
+    gap: 6px;
+  }
+  .calculation {
+    font-size: 12px;
+  }
+}

@@ -50,3 +50,26 @@ The suite does not prove full C++ conformance, exhaustive undefined-behavior det
 Additional actual-browser checks: play/pause with speed selection; edit math.cpp and observe output change from 12 to 18; cin transcript `7` produces `14`; runtime diagnostic banner jumps to an uninitialized read, and Previous step restores the preceding state. Saved projects survive reload. Effective content widths of 260px and 354px showed no page overflow after the narrow header/timeline correction; at 1309px the workspace used two columns. Measurements use actual CSS viewport width, since the browser's existing zoom differs from the requested viewport override.
 
 The generated `dist/index.html` was also exercised under `/dist/`: its relative worker executed the Conditions example to `Well done`, and the built language-contract dialog loaded successfully. No browser warning/error logs were reported in this final built-application check.
+
+## Visualizer V2 verification (2026-09-23)
+
+**147 automated tests pass, zero failures, zero skips.** The 107 original tests and their expectations are unchanged. Added: 39 educational trace/rendering tests and one differential test covering four complete acceptance programs. The original 35-program C++17 comparison remains intact and passes; the four new programs also match native Clang C++17 (39/39 comparisons total). `docs/test-results.txt` contains the complete final test output.
+
+New tests cover contiguous raw-event mapping, unchanged raw snapshots and final states, all detail modes, partial-group mode switching, reversible files/output, actual operands/deltas, precedence/associativity, integer/floating division, prefix/postfix, compound assignment, both short-circuit operators, mixed nested logic, if/else, nested conditions, switch matching/default/fall-through, all three loop forms, nested loops/break/continue, function calls/returns/recursion, value/reference parameters, shadowing, arrays/2D arrays, aliases, allocation/deletion and diagnostics. Every built-in example is derived and its educational views rendered at every group boundary. History rendering is checked against future-value disclosure. No interpreter expectations were weakened.
+
+Final audit corrections: recursive return preparation joins the call rather than creating an empty return step; completed returns retain the definition’s source location; calls inside if/switch resume as decisions; mixed logical operators identify the correct skipped operand; callee locals do not claim to shadow inaccessible caller locals; displayed stream operands retain precedence parentheses. Array reads as well as writes retain access highlighting. All changes are in trace/presentation code and the worker adapter, not C++ semantics.
+
+| Acceptance program | Output | Raw events | Dry Run steps | Reduction |
+| --- | --- | ---: | ---: | ---: |
+| Nested loops / continue / break | 68 | 430 | 68 | 84.2% |
+| Short circuit | 3 2 3 0 1 | 34 | 7 | 79.4% |
+| References and shadowing | 5 17 | 34 | 13 | 61.8% |
+| Pointer aliases | 30 30 30 | 34 | 9 | 73.5% |
+
+The nested-loop raw trace contains 156 expression-detail events, 138 bookkeeping events and 136 reasoning events. The adapter groups them by semantic boundaries rather than targeting a desired reduction. It records 4 outer and 16 inner iterations, 4 continues and 1 inner break. Reproduce these numbers with `node scripts/trace-report.js`; fixtures live in `tests/acceptance-programs.js`.
+
+Actual browser verification used the local module-worker application: default Dry Run; expanding/selecting Expression Details; raw-event navigation; partial-group mode switching; Next/Previous/restart/timeline; auto play and speed; original source-line highlighting; all eight views; reached iteration history; manual tabs suspending Follow; specialized automatic view selection; challenge prediction/check/reveal; multi-file source selection forward and backward; virtual-file contents before/after a write; cin input; diagnostic jump and rewind; and all four acceptance outputs. A three-file function return highlighted math.cpp line 4 and Previous restored main.cpp. Supplied input 7 produced 14. Both p and q connected to x=30. The short-circuit details showed ++b and ++c skipped.
+
+Desktop and narrow layouts were visually inspected at **actual CSS widths 1600, 433 and 320 pixels**, with document scroll width equal to viewport width. Browser zoom affects the mapping from requested viewport sizes; these are measured content widths. Expression details and loop history scroll within the existing visual panel. No browser errors were recorded. Static syntax checks and the production static build passed, followed by a browser smoke check of the built files.
+
+These are interactive browser checks, not a committed cross-browser automation suite. The existing C++ subset, trace budgets and platform abstractions still apply. A clean test run is evidence for the covered behavior, not proof of full C++ conformance or all possible educational groupings. See ARCHITECTURE.md for snapshot-boundary, nested-history and expression-order limitations.

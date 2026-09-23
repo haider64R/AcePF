@@ -22,7 +22,7 @@ In C++, `5 / 2` is 2 but `5.0 / 2` is 2.5. A number alone cannot tell us which r
 
 The engine explains an operation and saves the state after it. The screen plays this recording. Previous step moves back through saved states; it does not try to undo C++ code. This separation lets us improve the pictures without changing the language rules.
 
-Later sections will explain loops, frames, arrays and pointer lifetimes as those milestones are implemented.
+The default screen groups these detailed events into reasoning steps. The full recording remains available in Detailed Trace.
 
 ## 6. Loops do not jump randomly
 
@@ -66,6 +66,29 @@ The differential test compiles 35 carefully chosen programs with native C++17, r
 4. Read types.js's integer division and conversion rules.
 5. Find Runtime.declare, Runtime.execute and Runtime.emit. These connect PF statements to stored state and explanations.
 6. Study Memory.read/write before pointers.js. A pointer is less mysterious when it is a checked location.
-7. Follow one event into ui/app.js. Notice that the interface reads the state; it does not decide the result of addition or pointer arithmetic.
+7. Follow one event through trace/educational.js and trace/playback.js into ui/dry-run.js. The interface reads the state; it does not decide the result of addition or pointer arithmetic.
 
 Useful exercises: add an example without changing the engine; add a regression test for an out-of-bounds index; trace pass-by-value versus pass-by-reference; deliberately omit delete[] and find the leak event. To add a new language feature, start with a failing test and the supported-language contract.
+
+## 14. Use Dry Run like a paper trace
+
+Before pressing Next, predict what changes. Read the statement, its operands, the decision and the changed-storage table. For `total += i * j`, with total=4, i=2 and j=3, the card explains `total = 4 + (2 × 3) → 10`. This is one reasoning step. Unchanged unrelated variables are available in Variables rather than repeated in every card.
+
+Use the loop table to organize your paper into iterations. An outer iteration contains the inner iterations it actually reaches. Each row shows counter values, action and surviving mutations; expand it to revisit statements and decisions. After `continue` in a for-loop, predict the update and the next condition. After `break`, identify the loop or switch being exited. An enclosing loop can continue. The history only shows work already reached, so stepping does not give away later results.
+
+## 15. Expand the difficult expression
+
+Dry Run keeps Expression Details closed until needed. Select Expression Details to keep the current step’s explanations expanded, or open the Expressions view. Neither requires a click for each internal variable read.
+
+* `a++` uses the old value, then updates storage; `++a` updates first and uses the new value. A net before/after table and the expression’s returned value answer different questions.
+* `7 / 2` uses integer division and produces 3; `7.0 / 2` uses floating-point division and produces 3.5. Details identify promotions, conversions and remainders.
+* `a + b * c` groups multiplication inside addition. Equal-precedence operators associate according to the parsed structure. This does not mean all C++ operands are guaranteed to run left to right.
+* A false left operand of `&&` skips the right operand. A true left operand of `||` skips the right operand. Details name the skipped expression and explain why its increments or calls do not happen.
+* Array indexing identifies the actual cell, and pointer notes identify aliases sharing that storage. Changing `*p` changes `x` when p points to x; copying p to q makes two pointers to the same object.
+* A value parameter gets independent storage; a reference parameter names the caller’s storage. A shadowed local has different storage even when its name is identical. When its lifetime ends, the outer binding becomes visible again.
+
+## 16. Inspect the full recording when needed
+
+Detailed Trace retains all reads, intermediate operations and scope events. The raw-event list shows the events belonging to the current reasoning step; Next and the timeline traverse the entire raw recording. Switch detail levels freely: this does not run the program again or change the selected state. Switching to Dry Run halfway through a group shows a partial-step notice. Next reaches its completed boundary; Previous returns to an earlier reasoning boundary.
+
+All views share that selected snapshot. Console text, files, array cells, aliases and stack state rewind together. Follow Execution opens a specialized view for significant calls, indexing, pointer/heap or file operations. Selecting a tab yourself turns following off until you re-enable it. Return snapshots can briefly show a RETURNING frame whose locals have ended, before the caller resumes.

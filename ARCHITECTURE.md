@@ -17,7 +17,9 @@ Clang's AST tooling was evaluated (https://clang.llvm.org/docs/Tooling.html). It
 * Runtime: owns scopes, frames, expression evaluation, control flow and virtual streams.
 * Memory: typed allocations with identity, lifetime and bounds. Pointers identify an allocation plus element offset, never a host address.
 * Events: append-only records with source location, operation, explanation and detached state. Playback never re-executes a past operation.
-* UI: consumes events and snapshots. It cannot decide what a C++ operation means.
+* Educational trace: derives reasoning groups, explanations and deltas from raw events and source syntax. It does not execute expressions or synthesize machine state.
+* Playback: keeps an authoritative raw-event boundary while exposing grouped or raw indices.
+* UI: consumes the selected snapshot and educational description. It cannot decide what a C++ operation means.
 
 ## Runtime contract
 
@@ -46,7 +48,13 @@ Each milestone adds regression and interaction tests, runs the complete suite, c
 | src/engine/runtime.js | Coordinates evaluation, scopes, calls, control signals and events |
 | src/engine/index.js | Pure public runProject(files, options) entry point |
 | src/engine/worker.js | Browser worker boundary and unexpected-error reporting |
-| src/ui/app.js | Editor interactions, event playback and snapshot rendering |
+| src/trace/source.js | Syntax catalog and normalized source labels with original locations |
+| src/trace/educational.js | Pure raw-event grouping, raw-to-step mapping and dynamic loop iterations |
+| src/trace/state.js | Storage identity, state deltas, operands and alias descriptions |
+| src/trace/explain.js | Deterministic PF explanations based on recorded typed results |
+| src/trace/playback.js | Detail modes and exact snapshot boundary navigation |
+| src/ui/dry-run.js | Reasoning cards, expression details, raw list and reached loop history |
+| src/ui/app.js | Editor interactions, playback controls and eight snapshot views |
 | src/ui/examples.js / challenges.js | Educational source fixtures |
 
 ## Error handling and resource ownership
@@ -68,3 +76,31 @@ The runtime owns all memory, scope and I/O state. A scope records only the objec
 ## Security and release boundaries
 
 There is no eval, Function constructor, shell execution, network call or host-file access in the interpreter. Rendering escapes user-generated text. The development server uses a path boundary and serves recognized static extensions only. The static build excludes tests and development scripts. Source and input are device-local browser storage; no analytics or service credentials exist. This is a small independently implemented interpreter, so passing tests is not a claim of standards conformance or a replacement for external review.
+
+## Visualizer V2: educational trace contract
+
+The pipeline is source → loader/lexer/parser → AST validation → typed interpreter → immutable raw events → educational trace → playback → views. Only the worker adapter changed inside the engine directory; language evaluation remains in the existing interpreter. The worker records once, derives once, and sends both records to the UI.
+
+`deriveTrace(events, files)` is pure. It reads the original source AST for statement ownership, operator structure and source labels, and takes every value from recorded events. Invalid source retains its original diagnostic; no value is guessed. Source labels are normalized AST text rather than byte-for-byte source excerpts.
+
+Each educational step has `id`, `kind`, `loc`, contiguous `rawStart`/`rawEnd`, `snapshotRaw`, `state`, `before`, `delta`, `operands`, `details`, and optional loop/control/parameter information. `rawToStep` maps every raw index to exactly one group. Raw categories distinguish reasoning events, expression details (reads, intermediate expressions, short circuit, indexing and pointer operations), and runtime bookkeeping (statement markers and scope entry/exit). These categories describe the record; grouping is driven by AST ownership and dynamic frame/scope identities, not a blacklist of hidden UI events.
+
+Statement groups collect their reads, arithmetic, writes and associated bookkeeping. For-loop initialization + first condition, or update + next condition, form ordered reasoning steps. A decision whose selected body is solely break/continue can include that control action. Calls split execution at function boundaries: read-only argument preparation joins parameter binding and the call; observable argument mutations remain in their own segment. Returns retain their expression results and lifetime effects, including recursive calls. Scope exits with owned local storage or reference bindings remain visible; empty scope bookkeeping attaches to its surrounding operation. Diagnostics, leaks and completion remain visible.
+
+### Deliberate snapshot boundaries
+
+A group closes before the next semantic operation, call boundary, relevant lifetime exit or diagnostic. Its snapshot is the raw state at that chosen end boundary. It is not the final state of the source line: a line may contain several statements, calls and loop iterations. No synthetic merged state exists. Deltas compare the state before the group with the state at its end, keyed by allocation ID and cell offset, never variable name. This preserves shadowed objects, reference aliases, 2D coordinates, heap lifetime, console and file contents. Expression details preserve intermediate changes even when the net delta is zero.
+
+`TracePlayback.rawIndex` is authoritative. Dry Run and Expression Details navigate identical group boundaries; Detailed Trace navigates individual raw events. Changing mode preserves the current raw index. If it lies inside a group, the card explicitly says it is partial and shows only details already reached; Next completes that group. The UI uses the selected raw snapshot for **all eight views**. Group source locations drive file selection and highlighting; raw/partial playback uses the exact raw event location. Previous and timeline navigation never rerun the interpreter.
+
+A raw return snapshot may still contain the returning frame after its locals have expired; the frame is popped before the next caller event. Stack labels that boundary RETURNING. This retains the existing semantic record rather than inventing a new post-return frame snapshot.
+
+### Loops and following
+
+Iteration records use the real loop scope ID, iteration number and active enclosing loops. An iteration starts at the recorded body event and ends before the next update/condition or at loop exit. They retain the step IDs they span. The loop table includes both outer and inner iterations, their counter values at entry, condition/body ordering, reached break/continue and surviving body mutations. Expand an iteration to revisit its reached steps. History never reveals future values or actions; zero-iteration loops have a failed-condition step but no body row. For `continue` in a for-loop, the next reasoning step explicitly shows update → condition.
+
+Follow Execution uses one suggested subject per group. Calls/returns suggest Stack, indexed access suggests Arrays, pointer/heap operations suggest Memory and file operations suggest Files. Routine expressions do not switch tabs repeatedly: the reasoning card already explains them, and Expressions is available manually. A manual tab selection unchecks Follow. Other state views retain an expandable current-reasoning card.
+
+### Educational limitations
+
+Grouping is deterministic and bounded by the existing trace budgets; it is not a general C++ debugger or a minimal-step optimizer. Calls and meaningful local lifetimes can split one source statement into several steps. Large initializers and complex expressions can still have long detail lists. The iteration table records reached iterations rather than collapsing repeated iterations into a single invented result. It includes nested rows, so an outer row may summarize changes also shown by its children. Precedence/associativity explain expression structure; recorded evaluation order must not be taught as a universal left-to-right C++ guarantee. The documented C++ subset and machine-width abstractions remain unchanged.

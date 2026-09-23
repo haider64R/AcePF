@@ -1,3 +1,10 @@
+import { TracePlayback } from "../trace/playback.js";
+import {
+  reasoningPanel,
+  expressionPanel,
+  rawPanel,
+  loopHistory,
+} from "./dry-run.js";
 import { challenges } from "./challenges.js";
 import { examples } from "./examples.js";
 import { format, label, bytes } from "../engine/types.js";
@@ -15,6 +22,33 @@ const $ = (s) => document.querySelector(s),
         })[c],
     );
 let challengeIndex = 0;
+let playback = null;
+function presentedEvent() {
+  const e = events[cursor];
+  return playback && playback.mode !== "raw" && !playback.partial
+    ? {
+        ...e,
+        loc: playback.step.loc,
+        kind: playback.step.kind,
+        message: playback.step.why,
+      }
+    : e;
+}
+function accessed(object, offset) {
+  return playback && playback.mode !== "raw" && !playback.partial
+    ? playback.step.delta.cells.some(
+        (c) => c.ref.object === object && c.ref.offset === offset,
+      ) ||
+        playback
+          .rawRange()
+          .some(
+            (e) =>
+              e.detail.ref?.object === object &&
+              e.detail.ref?.offset === offset,
+          )
+    : events[cursor]?.detail?.ref?.object === object &&
+        events[cursor]?.detail?.ref?.offset === offset;
+}
 let files = { "main.cpp": examples[0].code },
   activeFile = "main.cpp",
   events = [],
@@ -39,7 +73,7 @@ const tabs = [
   "Files",
 ];
 $("#app").innerHTML =
-  `<header class="topbar"><a class="brand" href="./index.html" aria-label="C++ Execution Visualizer"><span class="brand-icon">C<span>++</span></span><span>Execution<span class="brand-muted"> Visualizer</span></span></a><span class="course">PROGRAMMING FUNDAMENTALS</span><button id="help" class="quiet">Supported C++ ↗</button><button id="challenge" class="quiet">◇ Challenge</button><button id="examples" class="quiet">▤ Examples</button></header><main><div class="workspace-heading"><div><span class="eyebrow">YOUR WORKSPACE</span><h1 id="project-title"></h1><p id="description">Explore what happens between one line and the next.</p></div><button id="run" class="primary">▶ Run program <kbd>⌘ ↵</kbd></button></div><section class="workspace"><section class="editor-panel" aria-label="Source editor"><div class="panel-top"><div id="file-tabs"></div><button id="add-file" class="icon-button" aria-label="Add source file">＋</button></div><div class="editor-wrap"><div id="line-numbers" aria-hidden="true"></div><div class="code-wrap"><pre id="highlight" aria-hidden="true"></pre><textarea id="editor" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="C++ source code" wrap="off"></textarea></div></div><div class="editor-footer"><span>C++17 · Educational subset</span><span id="source-position">main.cpp</span></div><label class="input-label" for="stdin">STANDARD INPUT <span>Values for cin, separated by spaces</span></label><textarea id="stdin" placeholder="e.g. 12 3" rows="2"></textarea></section><section class="visual-panel" aria-label="Execution visualization"><div class="visual-heading"><span>INSIDE THE PROGRAM</span><label class="follow"><input type="checkbox" id="follow" checked> Follow execution</label></div><nav id="view-tabs" aria-label="Visualization views"></nav><div id="visual-content"></div><div class="explanation"><div class="explanation-heading"><span id="event-label">READY</span><button id="why" class="quiet">Why?</button></div><p id="event-message" aria-live="polite"></p><p id="why-detail" hidden></p></div></section></section><section class="playback" aria-label="Playback controls"><button id="restart" class="icon-button" title="Restart" aria-label="Restart">↺</button><button id="previous" class="icon-button" title="Previous step" aria-label="Previous step">‹</button><button id="play" class="play-button" aria-label="Auto play">▶</button><button id="next" class="icon-button" title="Next step" aria-label="Next step">›</button><button id="statement" class="quiet">Next statement ⇥</button><div class="progress-wrap"><input id="timeline" aria-label="Execution timeline" type="range" min="0" max="0" value="0"><span id="step-label"></span></div><label class="speed-label">Speed <select id="speed"><option value="1400">0.5×</option><option value="700" selected>1×</option><option value="350">2×</option><option value="100">5×</option></select></label></section><section class="console-panel"><div class="console-heading"><span>CONSOLE <span class="muted">standard output</span></span><span id="run-status"></span></div><pre id="console-output" aria-live="polite"></pre></section><footer><span><span class="tiny-mark">{ }</span> See the code. Understand the execution.</span><span>Local execution · No AI guesses · Virtual memory</span></footer></main><dialog id="challenge-dialog"><div class="dialog-heading"><div><span class="eyebrow">PREDICT · THEN EXPLORE</span><h2 id="challenge-title"></h2></div><button id="close-challenge" class="icon-button" aria-label="Close challenge">×</button></div><p id="challenge-question"></p><pre id="challenge-code" class="large-console"></pre><label for="prediction">Your prediction</label><input id="prediction" autocomplete="off"><p id="challenge-feedback" aria-live="polite"></p><div class="dialog-actions"><button id="another-challenge">Another challenge</button><button id="check-prediction">Check answer</button><button id="reveal-challenge" class="primary">Reveal visualization</button></div></dialog><dialog id="library"><div class="dialog-heading"><div><span class="eyebrow">LEARN BY EXPLORING</span><h2>One concept at a time.</h2></div><button class="icon-button" id="close-library" aria-label="Close examples">×</button></div><div id="example-list"></div></dialog><dialog id="help-dialog"><div class="dialog-heading"><h2>A small, explicit C++ subset</h2><button class="icon-button" id="close-help" aria-label="Close help">×</button></div><div id="help-content"></div></dialog><dialog id="file-dialog"><form method="dialog"><h2>Add a source file</h2><label for="filename">File name (.cpp or .h)</label><input id="filename" pattern="[A-Za-z_][A-Za-z0-9_]*\.(cpp|h)" required placeholder="math.h"><p id="file-error"></p><div class="dialog-actions"><button value="cancel" formnovalidate>Cancel</button><button id="create-file" class="primary" value="create">Create file</button></div></form></dialog>`;
+  `<header class="topbar"><a class="brand" href="./index.html" aria-label="C++ Execution Visualizer"><span class="brand-icon">C<span>++</span></span><span>Execution<span class="brand-muted"> Visualizer</span></span></a><span class="course">PROGRAMMING FUNDAMENTALS</span><button id="help" class="quiet">Supported C++ ↗</button><button id="challenge" class="quiet">◇ Challenge</button><button id="examples" class="quiet">▤ Examples</button></header><main><div class="workspace-heading"><div><span class="eyebrow">YOUR WORKSPACE</span><h1 id="project-title"></h1><p id="description">Explore what happens between one line and the next.</p></div><button id="run" class="primary">▶ Run program <kbd>⌘ ↵</kbd></button></div><section class="workspace"><section class="editor-panel" aria-label="Source editor"><div class="panel-top"><div id="file-tabs"></div><button id="add-file" class="icon-button" aria-label="Add source file">＋</button></div><div class="editor-wrap"><div id="line-numbers" aria-hidden="true"></div><div class="code-wrap"><pre id="highlight" aria-hidden="true"></pre><textarea id="editor" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="C++ source code" wrap="off"></textarea></div></div><div class="editor-footer"><span>C++17 · Educational subset</span><span id="source-position">main.cpp</span></div><label class="input-label" for="stdin">STANDARD INPUT <span>Values for cin, separated by spaces</span></label><textarea id="stdin" placeholder="e.g. 12 3" rows="2"></textarea></section><section class="visual-panel" aria-label="Execution visualization"><div class="visual-heading"><span>INSIDE THE PROGRAM</span><label class="follow"><input type="checkbox" id="follow" checked> Follow execution</label></div><div class="detail-toolbar"><label for="detail-mode">Detail level</label><select id="detail-mode"><option value="dry">Dry Run</option><option value="expression">Expression Details</option><option value="raw">Detailed Trace</option></select><span id="trace-count"></span></div><nav id="view-tabs" aria-label="Visualization views"></nav><div id="visual-content"></div><div class="explanation"><div class="explanation-heading"><span id="event-label">READY</span><button id="why" class="quiet">Why?</button></div><p id="event-message" aria-live="polite"></p><p id="why-detail" hidden></p></div></section></section><section class="playback" aria-label="Playback controls"><button id="restart" class="icon-button" title="Restart" aria-label="Restart">↺</button><button id="previous" class="icon-button" title="Previous step" aria-label="Previous step">‹</button><button id="play" class="play-button" aria-label="Auto play">▶</button><button id="next" class="icon-button" title="Next step" aria-label="Next step">›</button><button id="statement" class="quiet">Next statement ⇥</button><div class="progress-wrap"><input id="timeline" aria-label="Execution timeline" type="range" min="0" max="0" value="0"><span id="step-label"></span></div><label class="speed-label">Speed <select id="speed"><option value="1400">0.5×</option><option value="700" selected>1×</option><option value="350">2×</option><option value="100">5×</option></select></label></section><section class="console-panel"><div class="console-heading"><span>CONSOLE <span class="muted">standard output</span></span><span id="run-status"></span></div><pre id="console-output" aria-live="polite"></pre></section><footer><span><span class="tiny-mark">{ }</span> See the code. Understand the execution.</span><span>Local execution · No AI guesses · Virtual memory</span></footer></main><dialog id="challenge-dialog"><div class="dialog-heading"><div><span class="eyebrow">PREDICT · THEN EXPLORE</span><h2 id="challenge-title"></h2></div><button id="close-challenge" class="icon-button" aria-label="Close challenge">×</button></div><p id="challenge-question"></p><pre id="challenge-code" class="large-console"></pre><label for="prediction">Your prediction</label><input id="prediction" autocomplete="off"><p id="challenge-feedback" aria-live="polite"></p><div class="dialog-actions"><button id="another-challenge">Another challenge</button><button id="check-prediction">Check answer</button><button id="reveal-challenge" class="primary">Reveal visualization</button></div></dialog><dialog id="library"><div class="dialog-heading"><div><span class="eyebrow">LEARN BY EXPLORING</span><h2>One concept at a time.</h2></div><button class="icon-button" id="close-library" aria-label="Close examples">×</button></div><div id="example-list"></div></dialog><dialog id="help-dialog"><div class="dialog-heading"><h2>A small, explicit C++ subset</h2><button class="icon-button" id="close-help" aria-label="Close help">×</button></div><div id="help-content"></div></dialog><dialog id="file-dialog"><form method="dialog"><h2>Add a source file</h2><label for="filename">File name (.cpp or .h)</label><input id="filename" pattern="[A-Za-z_][A-Za-z0-9_]*\.(cpp|h)" required placeholder="math.h"><p id="file-error"></p><div class="dialog-actions"><button value="cancel" formnovalidate>Cancel</button><button id="create-file" class="primary" value="create">Create file</button></div></form></dialog>`;
 function saveProject() {
   try {
     localStorage.setItem(
@@ -99,7 +133,7 @@ function highlight() {
   updateLines();
 }
 function updateLines() {
-  const e = events[cursor];
+  const e = presentedEvent();
   $("#line-numbers").innerHTML = $("#editor")
     .value.split("\n")
     .map(
@@ -155,7 +189,7 @@ function memoryCards(state, objects) {
           .slice(0, 128)
           .map(
             (v, i) =>
-              `<div class="cell ${events[cursor]?.detail?.ref?.object === o.id && events[cursor]?.detail?.ref?.offset === i ? "accessed" : ""}"><small>${o.shape.length === 2 ? "[" + Math.floor(i / o.shape[1]) + "][" + (i % o.shape[1]) + "]" : o.cells.length > 1 ? "[" + i + "]" : ""}</small><strong>${esc(display(v, state))}</strong>${v?.type.base === "char" && !v.type.pointer ? `<span class="char-code">${v.value} · 0x${v.value.toString(16).padStart(2, "0")}</span>` : ""}${v?.type.pointer && v.value ? `<span class="pointer-target">↳ ${esc(state.memory.find((x) => x.id === v.value.object)?.name)}[${v.value.offset}]</span>` : ""}</div>`,
+              `<div class="cell ${accessed(o.id, i) ? "accessed" : ""}"><small>${o.shape.length === 2 ? "[" + Math.floor(i / o.shape[1]) + "][" + (i % o.shape[1]) + "]" : o.cells.length > 1 ? "[" + i + "]" : ""}</small><strong>${esc(display(v, state))}</strong>${v?.type.base === "char" && !v.type.pointer ? `<span class="char-code">${v.value} · 0x${v.value.toString(16).padStart(2, "0")}</span>` : ""}${v?.type.pointer && v.value ? `<span class="pointer-target">↳ ${esc(state.memory.find((x) => x.id === v.value.object)?.name)}[${v.value.offset}]</span>` : ""}</div>`,
           )
           .join(
             "",
@@ -193,7 +227,7 @@ function empty(message) {
   return `<div class="empty-state"><span>{ }</span><p>${message}</p></div>`;
 }
 function render() {
-  const e = events[cursor],
+  const e = presentedEvent(),
     state = e?.state ?? {
       scopes: [],
       memory: [],
@@ -210,12 +244,12 @@ function render() {
     .join("");
   let html = "";
   if (tab === "Execution") {
-    const alive = state.memory.filter((o) => o.alive && o.region !== "heap");
-    html =
-      `<div class="view-intro"><span class="eyebrow">${e?.kind === "end" ? "PROGRAM COMPLETE" : "LIVE STATE"}</span><h2>${e?.kind === "diagnostic" ? "Let’s look at this." : e?.kind === "end" ? "Every step tells a story." : "Follow the changing values."}</h2><p>${e?.loc ? esc(e.loc.file) + " · line " + e.loc.line : "Run your program to start exploring."}</p></div>` +
-      (alive.length
-        ? memoryCards(state, alive)
-        : empty("Variables appear here as your program creates them."));
+    html = playback
+      ? (playback.mode === "raw"
+          ? rawPanel(playback)
+          : reasoningPanel(playback, playback.mode === "expression")) +
+        loopHistory(playback)
+      : empty("Run a program to start a dry run.");
   }
   if (tab === "Variables")
     html =
@@ -249,25 +283,16 @@ function render() {
         .toReversed()
         .map(
           (f, i) =>
-            `<div class="frame"><span class="frame-index">${String(state.frames.length - i).padStart(2, "0")}</span><div><strong>${esc(f.name)}()</strong><p>${f.caller ? "Called by " + esc(f.caller) : "Program entry"}</p></div><span>${i === 0 ? "ACTIVE" : "WAITING"}</span></div>`,
+            `<div class="frame"><span class="frame-index">${String(state.frames.length - i).padStart(2, "0")}</span><div><strong>${esc(f.name)}()</strong><p>${f.caller ? "Called by " + esc(f.caller) : "Program entry"}</p></div><span>${i === 0 ? (e?.kind === "return" ? "RETURNING" : "ACTIVE") : "WAITING"}</span></div>`,
         )
         .join("") +
       variables(state);
   if (tab === "Expressions") {
-    const expressions = events
-      .slice(0, cursor + 1)
-      .filter((x) =>
-        ["expression", "short-circuit", "read", "write"].includes(x.kind),
-      )
-      .slice(-8);
     html =
-      '<div class="view-intro"><h2>Make the invisible visible.</h2><p>Operands, intermediate values, and the order they are evaluated.</p></div>' +
-      expressions
-        .map(
-          (x, i) =>
-            `<div class="expression-step ${x.id === e?.id ? "selected" : ""}"><span>${i + 1}</span><div><code>${esc(x.message)}</code>${x.detail.conversion ? "<small>" + esc(x.detail.conversion) + "</small>" : ""}</div></div>`,
-        )
-        .join("");
+      '<div class="view-intro"><h2>Reason through the expression.</h2><p>All relevant intermediate results for the current reasoning step.</p></div>' +
+      (playback?.step
+        ? expressionPanel(playback.step, cursor)
+        : empty("Run a program to see expression details."));
   }
   if (tab === "Console")
     html =
@@ -283,10 +308,18 @@ function render() {
             `<div class="virtual-file"><strong>${esc(name)}</strong><pre>${esc(content)}</pre></div>`,
         )
         .join("");
+  if (
+    playback &&
+    playback.mode !== "raw" &&
+    !["Execution", "Expressions"].includes(tab)
+  )
+    html =
+      `<details class="step-context"><summary>Current reasoning: ${esc(playback.step.title)}</summary>${reasoningPanel(playback)}</details>` +
+      html;
   const diagnostic = events.find((x) => x.kind === "diagnostic");
   $("#visual-content").innerHTML =
     (diagnostic && e?.kind !== "diagnostic"
-      ? `<button id="jump-error" class="diagnostic-banner">Recording stopped: ${esc(diagnostic.message)} <span>Go to step ${diagnostic.id + 1} →</span></button>`
+      ? `<button id="jump-error" class="diagnostic-banner">Recording stopped: ${esc(diagnostic.message)} <span>Go to diagnostic →</span></button>`
       : "") + html;
   $("#event-label").textContent = dirty
     ? "SOURCE CHANGED"
@@ -296,15 +329,26 @@ function render() {
     : (e?.message ?? "Use Run program to start a deterministic execution.");
   $(".explanation").classList.toggle("error", e?.kind === "diagnostic");
   $("#why-detail").hidden = !showWhy;
-  $("#why-detail").textContent = why(e);
+  $("#why-detail").textContent =
+    playback?.mode !== "raw" && !playback?.partial
+      ? (playback?.step?.why ?? why(e))
+      : why(e);
   $("#why").setAttribute("aria-expanded", showWhy);
   $("#console-output").textContent =
     state.output || "Output appears here when cout executes.";
   $("#console-output").classList.toggle("placeholder", !state.output);
-  $("#timeline").max = Math.max(0, events.length - 1);
-  $("#timeline").value = cursor;
+  $("#detail-mode").value = playback?.mode ?? "dry";
+  $("#trace-count").textContent = playback
+    ? `${playback.trace.steps.length} reasoning · ${events.length} raw`
+    : "";
+  $("#statement").textContent =
+    playback?.mode === "raw" ? "Next statement ⇥" : "Next reasoning ⇥";
+  $("#timeline").max = Math.max(0, (playback?.length ?? 0) - 1);
+  $("#timeline").value = playback?.index ?? 0;
+  $("#timeline").disabled = dirty || !events.length;
+  $("#restart").disabled = dirty || !events.length;
   $("#step-label").textContent = events.length
-    ? `${cursor + 1} / ${events.length} steps`
+    ? `${(playback?.index ?? 0) + 1} / ${playback?.length ?? 0} ${playback?.mode === "raw" ? "events" : "steps"}${playback?.partial ? " · partial" : ""}`
     : "No recording";
   $("#run-status").textContent = dirty
     ? "Changes not run"
@@ -318,7 +362,7 @@ function render() {
           ? (timer ? "Playing at line " : "Paused at line ") +
             (e?.loc?.line ?? "—")
           : "Ready";
-  $("#previous").disabled = dirty || cursor === 0;
+  $("#previous").disabled = dirty || (playback?.index ?? 0) === 0;
   $("#next").disabled = dirty || cursor >= events.length - 1;
   $("#statement").disabled = dirty || cursor >= events.length - 1;
   $("#play").disabled = !events.length || dirty;
@@ -359,29 +403,44 @@ function pause() {
       "Paused",
     );
 }
-function move(next) {
-  cursor = Math.max(0, Math.min(events.length - 1, next));
-  const e = events[cursor];
+function move(next, preserve = false) {
+  if (!playback) return;
+  if (!preserve) playback.seek(next);
+  cursor = playback.rawIndex;
+  const e = presentedEvent();
   if (e?.loc && files[e.loc.file] !== undefined && activeFile !== e.loc.file) {
     activeFile = e.loc.file;
     fileTabs();
   }
-  if (follow && e) {
-    const map = {
-      expression: "Expressions",
-      "short-circuit": "Expressions",
-      call: "Stack",
-      return: "Stack",
-      allocate: "Memory",
-      free: "Memory",
-      pointer: "Memory",
-      "array-access": "Arrays",
-      file: "Files",
-    };
-    if (map[e.kind]) tab = map[e.kind];
-  }
+  // Routine reasoning stays in the current view. Specialized operations can
+  // follow their subject; manual view selection suspends following.
+  if (
+    !preserve &&
+    follow &&
+    playback.index > 0 &&
+    playback.step?.suggestedView !== "Execution"
+  )
+    tab = playback.step.suggestedView;
   render();
+  if (e?.loc?.file === activeFile && !dirty) {
+    const editor = $("#editor"),
+      top = (e.loc.line - 1) * 24;
+    if (
+      top < editor.scrollTop ||
+      top > editor.scrollTop + editor.clientHeight - 48
+    ) {
+      editor.scrollTop = Math.max(0, top - 72);
+      editor.dispatchEvent(new Event("scroll"));
+    }
+  }
 }
+function advance() {
+  if (playback) {
+    playback.next();
+    move(playback.index);
+  }
+}
+
 function run() {
   saveProject();
   pause();
@@ -408,6 +467,7 @@ function run() {
       return;
     }
     events = data.events;
+    playback = new TracePlayback(events, data.trace);
     cursor = 0;
     dirty = false;
     tab = "Execution";
@@ -424,6 +484,25 @@ function run() {
     options: { input: $("#stdin").value, files: virtualFiles },
   });
 }
+$("#detail-mode").onchange = (e) => {
+  pause();
+  playback?.setMode(e.target.value);
+  move(0, true);
+};
+$("#visual-content").addEventListener("click", (e) => {
+  const raw = e.target.closest("[data-raw]"),
+    reasoning = e.target.closest("[data-reasoning]");
+  if (raw) {
+    pause();
+    playback.setMode("raw");
+    move(Number(raw.dataset.raw));
+  }
+  if (reasoning) {
+    pause();
+    playback.setMode("dry");
+    move(Number(reasoning.dataset.reasoning));
+  }
+});
 $("#run").onclick = run;
 $("#editor").addEventListener("input", () => {
   files[activeFile] = $("#editor").value;
@@ -463,17 +542,19 @@ $("#view-tabs").onclick = (e) => {
   const b = e.target.closest("[data-tab]");
   if (b) {
     tab = b.dataset.tab;
+    follow = false;
+    $("#follow").checked = false;
     render();
   }
 };
 $("#follow").onchange = (e) => (follow = e.target.checked);
 $("#next").onclick = () => {
   pause();
-  move(cursor + 1);
+  advance();
 };
 $("#previous").onclick = () => {
   pause();
-  move(cursor - 1);
+  move((playback?.index ?? 0) - 1);
 };
 $("#restart").onclick = () => {
   pause();
@@ -485,6 +566,10 @@ $("#timeline").oninput = (e) => {
 };
 $("#statement").onclick = () => {
   pause();
+  if (playback?.mode !== "raw") {
+    advance();
+    return;
+  }
   let i = cursor + 1;
   while (i < events.length - 1 && events[i].kind !== "statement") i++;
   move(i);
@@ -503,7 +588,7 @@ $("#play").onclick = () => {
         pause();
         return;
       }
-      move(cursor + 1);
+      advance();
     },
     Number($("#speed").value),
   );
@@ -574,7 +659,7 @@ $("#create-file").onclick = (e) => {
 $("#visual-content").onclick = (e) => {
   if (e.target.closest("#jump-error")) {
     pause();
-    move(events.length - 1);
+    move((playback?.length ?? 1) - 1);
   }
   if (e.target.id === "seed-file") {
     const name = prompt("Virtual file name:", "input.txt");
