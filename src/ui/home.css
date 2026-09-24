@@ -1,0 +1,116 @@
+.home-shell {
+  max-width: 1240px;
+  padding: 72px 32px 90px;
+}
+.home-hero {
+  max-width: 760px;
+  padding: 12px 0 72px;
+}
+.home-hero h1 {
+  font-size: clamp(42px, 6.5vw, 78px);
+  line-height: 1.07;
+  letter-spacing: -0.055em;
+  margin: 18px 0 22px;
+}
+.home-hero h1 em {
+  font-style: normal;
+  color: var(--green);
+}
+.home-hero p {
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.65;
+  max-width: 650px;
+}
+.home-path {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.home-path a {
+  display: flex;
+  flex-direction: column;
+  padding: 26px;
+  min-height: 260px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  transition:
+    border-color 0.15s,
+    transform 0.15s;
+}
+.home-path a:hover {
+  border-color: var(--green);
+  transform: translateY(-2px);
+}
+.home-path span {
+  font: 11px var(--mono);
+  color: var(--green);
+  letter-spacing: 1px;
+}
+.home-path h2 {
+  font-size: 25px;
+  margin: 28px 0 8px;
+}
+.home-path p {
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 0;
+}
+.home-path strong {
+  font-size: 13px;
+  color: var(--green);
+  margin-top: auto;
+  padding-top: 22px;
+}
+.home-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border-top: 1px solid var(--line);
+  margin-top: 66px;
+  padding-top: 32px;
+}
+.home-secondary h2 {
+  margin: 10px 0;
+}
+.home-secondary p {
+  color: var(--muted);
+  margin: 0;
+}
+.secondary {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--line);
+}
+.secondary:hover {
+  background: var(--raised);
+  color: var(--text);
+}
+@media (max-width: 900px) {
+  .home-path {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .home-shell {
+    padding: 42px 16px 70px;
+  }
+  .home-hero {
+    padding-bottom: 44px;
+  }
+  .home-hero p {
+    font-size: 16px;
+  }
+  .home-path {
+    grid-template-columns: 1fr;
+  }
+  .home-path a {
+    min-height: 190px;
+  }
+  .home-secondary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

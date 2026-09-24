@@ -28,7 +28,7 @@ import {
 
 const clone = (value) => structuredClone(value);
 const ids = (records) => records.map((record) => record.id);
-const authoredQuestions = questions.filter((q) => q.source.type === "authored");
+const authoredQuestions = questions.filter((q) => q.tags?.includes("challenge"));
 const authoredQuery = (filters) => queryQuestions(filters, authoredQuestions);
 
 test("taxonomy has ten ordered categories and unique, valid three-level IDs", () => {
@@ -339,7 +339,7 @@ test("existing examples retain source and gain valid canonical concepts", () => 
 });
 
 test("notes model validates structured blocks and cross-content references", () => {
-  assert.equal(notes.length, 3);
+  assert.equal(notes.length, 10);
   const note = {
     id: "pointer-note",
     topicId: "pointers.arithmetic",
@@ -372,7 +372,7 @@ test("notes model validates structured blocks and cross-content references", () 
   ]);
   assert.deepEqual(
     ids(relatedContent("pointers.arithmetic", { notes: [note] }).questions),
-    ["follow-the-array"],
+    ["follow-the-array", "ace-pointer-offset"],
   );
   assert.deepEqual(
     ids(relatedContent("pointers.arithmetic", { notes: [note] }).examples),

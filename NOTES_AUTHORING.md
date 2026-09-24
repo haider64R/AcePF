@@ -1,12 +1,12 @@
 # Notes authoring guide
 
-Notes are native website content, not HTML documents. The only authored records currently live in `src/content/notes.js`: **Operators & Expressions**, **Loops**, and **Pointers**. Do not infer that a mapped category has a finished guide. `notes.html` marks every other category as planned.
+Notes are native website content, not HTML documents. The ten authored guides live in `src/content/notes.js` and `src/content/notes-extra.js`: Fundamentals, Operators & Expressions, Selection, Loops, Functions, Arrays, Pointers, Dynamic Memory, Project Structure and File Handling. Every major canonical category now has a guide.
 
 ## The learning standard
 
 A guide should teach the learner to perform the trace on paper: what the syntax names, the value or control-flow decision at each stage, the resulting state, and the mistake likely to change an exam answer. Keep prose short. Prefer one accurate table, comparison or diagram over repeating a rule in several paragraphs. End with a compact quick-revision section. Only use C++ behavior within `SUPPORTED_CPP.md`; do not imply that the interpreter defines all of C++17. Avoid side-effect expressions with undefined or disputed sequencing. Use native C++ comparisons when a sample depends on a subtle rule.
 
-The three guides model different treatments:
+The original three guides model different treatments:
 
 * Operators keeps **expression value** separate from **stored state** with prefix/postfix comparisons, a precedence aid, type examples and short-circuit state rows.
 * Loops uses a **condition/body/update** procedure and iteration tables, including the final false check, nested reset, continue and break.
@@ -34,11 +34,11 @@ For a runnable block, choose a `sampleId` unique **within that note** and includ
 
 ## Relationships and navigation
 
-Use canonical topic IDs from `src/content/taxonomy.js`. `notes.html?topic=<topic-id>` resolves a guide by its `topicId`; the landing page shows the three available guides and the ten-category progression. A small client-side search filters authored guide titles, leads and descendant topic names. It does not search full prose or all 152 taxonomy records.
+Use canonical topic IDs from `src/content/taxonomy.js`. `notes.html?topic=<topic-id>` resolves a guide by its `topicId`; the landing page shows all ten available guides and the ten-category progression. A small client-side search filters authored guide titles, leads and descendant topic names. It does not search full prose or all 152 taxonomy records.
 
-The related Examples and Challenges sections call `queryExamples` and `queryQuestions` with the note's canonical topic ID. Direct primary-topic matches come first; secondary-tag matches can fill the small list. They are never copied into a note. Verified Challenge records link to the existing dialog; Examples link to the existing editor. If the bank has no suitable item, the section states that plainly. `relatedTopics` names canonical adjacent concepts, including areas whose guide is not yet authored.
+The related Examples and Challenges sections call `queryExamples` and `queryQuestions` with the note's canonical topic ID. Direct primary-topic matches come first; secondary-tag matches can fill the small list. They are never copied into a note. Verified related questions link to Challenge V2 when automatically gradable, or to Exam Mode browsing for manual review; the three original tagged Challenges retain their quick dialog. Examples link to the Visualizer editor. If the bank has no suitable item, the section states that plainly. `relatedTopics` names canonical adjacent concepts, and can link to the corresponding completed guide.
 
-## Adding the next guide
+## Adding or revising a guide
 
 1. Choose its existing canonical `topicId`; add the record to `notes.js` without changing that topic's stable ID.
 2. Draft the paper-trace method and one worked state transition first. Then add syntax, traps and revision blocks that help that method.
@@ -46,4 +46,4 @@ The related Examples and Challenges sections call `queryExamples` and `queryQues
 4. Add complete Visualizer samples where observing execution helps; verify output and diagnostics. Keep snippet-only blocks clearly distinct.
 5. Run the focused Notes tests, entire suite, syntax check and static build. Open the guide at desktop and mobile sizes; inspect code/table scrolling and links to Examples, Challenges and Visualizer.
 
-The current UI is a content foundation, not a full learning management system. It has no progress tracking, per-subtopic pages or full-text curriculum search. Future content can be added primarily as structured records; a future global UI pass may revisit navigation or typography without changing the content contracts.
+The platform has no account-backed progress tracking, per-subtopic pages or full-text search of guide prose. Additional teaching material should be added as structured records and verified against the same content and routing contracts.

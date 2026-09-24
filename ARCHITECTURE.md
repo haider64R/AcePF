@@ -58,20 +58,22 @@ Each milestone adds regression and interaction tests, runs the complete suite, c
 | src/ui/app.js | Editor interactions, playback controls and eight snapshot views |
 | src/ui/examples.js / challenges.js | Compatibility re-export and shared-bank Challenge selector |
 | src/content/taxonomy.js / scopes.js | Ordered topic tree and reusable syllabus rules |
-| src/content/questions.js / examples.js / notes.js | Canonical content records; examples retain existing programs |
+| src/content/questions.js / authored-questions.js / examples.js / notes.js / notes-extra.js | Canonical question, example and ten-guide Notes records |
 | src/content/assessment-corpus.js / assessment-sources.js | Sourced question records, all-PDF inventory and evidence-bound assessment profiles |
 | src/content/selectors.js / validate.js / index.js | Shared queries, early validation and public content entry point |
 | src/content/notes-routing.js | Stable note/sample and example/question URL resolution for Visualizer handoff |
 | src/ui/notes-render.js / notes-ui.js / notes.css | Pure structured-block renderer, Notes page navigation/search and responsive styles |
-| notes.html | Native Notes page shell; built alongside index.html |
+| src/learning/assessment.js | Pure candidate selection, deterministic balancing, sessions, timing and scoring |
+| src/ui/assessment-render.js / practice-ui.js / exam-ui.js | Shared question presentation, Challenges and Exam Mode |
+| home.html / notes.html / practice.html / exam.html / index.html | Static product routes built together |
 
-Challenge Mode selects compatible, verified prediction records tagged `challenge` from the shared question bank. Its existing dialog still compares the authored answer and loads the record's source into the Visualizer. Future Notes, Exam Mode and past-paper browsing should consume the same topic IDs and question records through selectors. [CONTENT_MODEL.md](CONTENT_MODEL.md) defines the schema and authoring rules.
+The legacy quick-challenge dialog still selects its three tagged records and loads a normal Visualizer recording. Challenge V2 selects verified auto-gradable questions from the same bank using canonical scope, topic and difficulty filters. Exam Mode also consumes that bank; no question is duplicated into a page component. [CONTENT_MODEL.md](CONTENT_MODEL.md) defines the schema and authoring rules.
 
 The assessment corpus is data in this content domain, not an execution layer. Each sourced record maps to a PDF page and question part. `autoGradable`, `verification`, and `visualizer.compatible` distinguish deterministic scoring, answer confidence, and current interpreter support. `validateAssessmentCorpus` checks source inventory consistency and assessment profiles before the app starts; [ASSESSMENT_CORPUS.md](ASSESSMENT_CORPUS.md) records observed patterns and omissions.
 
-Notes V1 is a separate consumer of that content layer. `notes.html?topic=<canonical-id>` resolves one authored guide; the landing page shows the ten-category map and searches the three authored guides client-side. `notes-render.js` escapes all text and renders reusable paragraph, list, procedure, code, table, comparison, callout and conceptual-memory blocks. Tables and code scroll inside their own container at narrow widths. Examples and verified Challenges are queried by the guide's canonical topic, with primary matches ranked first and a short related list. Empty states are explicit.
+Notes is a consumer of that content layer. `notes.html?topic=<canonical-id>` resolves one of ten authored guides; the landing page shows the ten-category map and searches all guides client-side. `notes-render.js` escapes all text and renders reusable paragraph, list, procedure, code, table, comparison, callout and conceptual-memory blocks. Tables and code scroll inside their own container at narrow widths. Examples and verified questions are queried by the guide's canonical topic, with primary matches ranked first and a short related list. Empty states are explicit.
 
-Runnable code blocks have stable `sampleId`s. An Open in Visualizer URL contains only note/sample IDs; `notes-routing.js` resolves them to exact checked-in source. The existing app loads that source into its normal worker and playback without altering engine or trace semantics. The initial linked preview does not overwrite the user's saved project until they edit or explicitly run it. Challenge links select and open the existing prediction dialog. [NOTES_AUTHORING.md](NOTES_AUTHORING.md) defines the authoring and specialized-block extension contract.
+Runnable code blocks have stable `sampleId`s. An Open in Visualizer URL contains only note/sample IDs; `notes-routing.js` resolves them to exact checked-in source. The existing app loads that source into its normal worker and playback without altering engine or trace semantics. The initial linked preview does not overwrite the user's saved project until they edit or explicitly run it. Related questions route to Challenge V2 when automatically gradable, to Exam Mode browsing when manual review is needed, or to the retained quick-challenge dialog for its three original records. [NOTES_AUTHORING.md](NOTES_AUTHORING.md) defines the authoring and specialized-block extension contract.
 
 ## Error handling and resource ownership
 
@@ -120,3 +122,11 @@ Follow Execution uses one suggested subject per group. Calls/returns suggest Sta
 ### Educational limitations
 
 Grouping is deterministic and bounded by the existing trace budgets; it is not a general C++ debugger or a minimal-step optimizer. Calls and meaningful local lifetimes can split one source statement into several steps. Large initializers and complex expressions can still have long detail lists. The iteration table records reached iterations rather than collapsing repeated iterations into a single invented result. It includes nested rows, so an outer row may summarize changes also shown by its children. Precedence/associativity explain expression structure; recorded evaluation order must not be taught as a universal left-to-right C++ guarantee. The documented C++ subset and machine-width abstractions remain unchanged.
+
+## AcePF V1 learning and assessment layer
+
+The execution core and educational trace are unchanged. `notes-extra.js` extends the validated structured Notes model to all ten major PF areas. Each runnable Notes program carries an exact checked output and is linked by stable note/sample IDs. `authored-questions.js` adds AcePF originals with explicit `source.type: "authored"`; the 29 PDF-derived records remain in `assessment-corpus.js` with their original provenance and verification metadata.
+
+`src/learning/assessment.js` is a DOM-free layer over the canonical selectors. It chooses verified, auto-gradable Challenge candidates; balances seeded sets across categories; constructs mock candidates from the evidence-limited assessment profiles; groups genuine exam records by source document; and grades only deterministic question types. Session state holds question IDs and responses, never copies question records. Exam Mode stores its current session locally for reload recovery. Timers use the recorded start time, so refreshing does not reset the limit. The UI suppresses answer, explanation and Visualizer controls during an active attempt and displays those after submission. Historical paper sets include only verified imported questions and are always labelled partial; source-only or draft records remain inspectable in the Question Bank.
+
+Home and shared navigation connect Notes, Visualizer, Challenges, Exam Mode and the existing Examples library. URL handoffs carry IDs, which are resolved through the same content bank. All five pages are static ES modules; no backend or account service was added.

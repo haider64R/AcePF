@@ -9,11 +9,11 @@ const sidebar = categories
     const item = noteForTopic(category.id);
     return item
       ? `<a href="${noteHref(category.id)}" ${note?.id === item.id ? 'aria-current="page"' : ""}>${esc(category.title)}</a>`
-      : `<span class="notes-pending">${esc(category.title)} <small>planned</small></span>`;
+      : `<span class="notes-pending">${esc(category.title)} <small>unavailable</small></span>`;
   })
   .join("");
 document.querySelector("#app").innerHTML =
-  `<header class="topbar"><a class="brand" href="./index.html" aria-label="C++ Execution Visualizer"><span class="brand-icon">C<span>++</span></span><span>Execution<span class="brand-muted"> Visualizer</span></span></a><span class="course">PROGRAMMING FUNDAMENTALS</span><a class="quiet" href="./notes.html" aria-current="${note ? "false" : "page"}">▤ Notes</a><a class="quiet" href="./index.html">↗ Visualizer</a></header><div class="notes-shell"><aside class="notes-sidebar" aria-label="Notes categories"><a class="sidebar-home" href="./notes.html">All notes</a><h2>Topics</h2><nav>${sidebar}</nav><p>${notes.length} field guides available</p></aside><main class="notes-main">${note ? renderNote(note) : requested ? `<div class="notes-missing"><h1>Guide not available yet</h1><p>This category is mapped, but its notes have not been authored.</p><a href="./notes.html">← All notes</a></div>` : renderLanding()}</main></div>`;
+  `<header class="topbar"><a class="brand" href="./home.html"><span class="brand-icon">A<span>+</span></span><span>Ace<span class="brand-muted">PF</span></span></a><nav class="product-nav" aria-label="Primary"><a href="./home.html">Home</a><a href="./index.html">Visualizer</a><a href="./notes.html" aria-current="page">Notes</a><a href="./practice.html">Challenges</a><a href="./exam.html">Exam Mode</a><a href="./index.html?examples=1">Examples</a></nav></header><div class="notes-shell"><aside class="notes-sidebar" aria-label="Notes categories"><a class="sidebar-home" href="./notes.html">All notes</a><h2>Topics</h2><nav>${sidebar}</nav><p>${notes.length} field guides available</p></aside><main class="notes-main">${note ? renderNote(note) : requested ? `<div class="notes-missing"><h1>Guide not available</h1><p>Choose one of the ten current curriculum guides.</p><a href="./notes.html">← All notes</a></div>` : renderLanding()}</main></div>`;
 document.querySelector("#notes-search")?.addEventListener("input", (event) => {
   const value = event.target.value.trim().toLowerCase();
   let count = 0;

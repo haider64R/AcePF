@@ -2,6 +2,7 @@ import { examples } from "./examples.js";
 import { notes } from "./notes.js";
 import { questions } from "./questions.js";
 import { assessmentQuestions } from "./assessment-corpus.js";
+import { authoredQuestions } from "./authored-questions.js";
 import { assessmentSources, assessmentProfiles } from "./assessment-sources.js";
 import { categories, topics, getTopic } from "./taxonomy.js";
 import { coreScopes, resolveScope, earliestCoreScope } from "./scopes.js";
@@ -42,6 +43,7 @@ export {
   earliestCoreScope,
   questions,
   assessmentQuestions,
+  authoredQuestions,
   assessmentSources,
   assessmentProfiles,
   examples,

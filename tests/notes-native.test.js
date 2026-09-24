@@ -15,7 +15,7 @@ try {
 }
 
 test(
-  "all eleven Notes samples agree with native C++17",
+  "all nineteen Notes samples agree with native C++17",
   { skip: !compiler },
   () => {
     const dir = mkdtempSync(join(tmpdir(), "cpp-notes-native-"));
@@ -51,7 +51,7 @@ test(
               assert.equal(interpreted.state.output, native, label);
               count++;
             }
-      assert.equal(count, 11);
+      assert.equal(count, 19);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

@@ -22,11 +22,13 @@ import {
 
 const clone = (value) => structuredClone(value);
 
-test("three authored guides use canonical topics and valid structured blocks", () => {
+test("ten authored guides cover every canonical category with valid blocks", () => {
   assert.deepEqual(
-    notes.map((note) => note.topicId),
+    notes.slice(0, 3).map((note) => note.topicId),
     ["operators", "loops", "pointers"],
   );
+  assert.equal(notes.length, 10);
+  assert.equal(new Set(notes.map((note) => note.topicId)).size, 10);
   assert.equal(validateNotes(notes, { questions, examples }), true);
   for (const note of notes) {
     assert.ok(
@@ -81,7 +83,7 @@ test("every runnable note sample executes and matches its authored output", () =
           assert.equal(result.state.output, expected);
           count++;
         }
-  assert.equal(count, 11);
+  assert.equal(count, 19);
 });
 
 test("related examples and verified questions are derived from shared tags", () => {
@@ -95,10 +97,7 @@ test("related examples and verified questions are derived from shared tags", () 
   assert.ok(pointers.questions.some((item) => item.id === "follow-the-array"));
   assert.equal(operators.examples[0].id, "postfix-order");
   assert.equal(operators.questions[0].id, "postfix-puzzle");
-  assert.deepEqual(
-    operators.questions.map((item) => item.id),
-    ["postfix-puzzle"],
-  );
+  assert.equal(operators.questions[0].id, "postfix-puzzle");
   assert.equal(loops.examples[0].id, "for-phases");
   assert.equal(pointers.examples[0].id, "pointer-connection");
   for (const related of [operators, loops, pointers]) {
@@ -125,7 +124,7 @@ test("sparse related content renders a useful empty state", () => {
   const sparse = { ...notes[0], topicId: "fundamentals.constants" };
   const html = renderNote(sparse);
   assert.match(html, /No matching examples yet/);
-  assert.match(html, /No verified Challenge/);
+  assert.match(html, /No verified question/);
 });
 
 test("landing, navigation and specialized blocks render escaped native HTML", () => {

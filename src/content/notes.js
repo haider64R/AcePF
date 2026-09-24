@@ -1,5 +1,6 @@
 // Authored teaching records. A sampleId lets the existing Visualizer load a
 // code block; the renderer decides how every block appears.
+import { additionalNotes } from "./notes-extra.js";
 const paragraph = (text) => ({ type: "paragraph", text });
 const code = (sampleId, text, caption) => ({
   type: "code",
@@ -484,4 +485,5 @@ export const notes = [
       "dynamic-memory.lifetime",
     ],
   },
+  ...additionalNotes,
 ];

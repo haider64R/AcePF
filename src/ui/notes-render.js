@@ -31,6 +31,11 @@ export function exampleHref(example) {
 export function challengeHref(question) {
   return href("./index.html", { challenge: question.id });
 }
+export function questionHref(question) {
+  return question.tags?.includes("challenge") && question.source.type === "authored"
+    ? challengeHref(question)
+    : href(question.autoGradable ? "./practice.html" : "./exam.html", { question: question.id });
+}
 
 export function renderBlock(block, note) {
   switch (block.type) {
@@ -61,8 +66,7 @@ export function relatedForNote(note) {
   const matchedQuestions = queryQuestions({
     topicId: note.topicId,
     status: "verified",
-    tag: "challenge",
-  });
+  }).filter((item) => item.verification !== "manual-review" && item.verification !== "source-only");
   const directQuestions = matchedQuestions.filter((item) => rank(item) === 0);
   return {
     examples: queryExamples({ topicId: note.topicId })
@@ -99,10 +103,10 @@ export function renderNote(note) {
     ? related.questions
         .map(
           (item) =>
-            `<a class="related-card" href="${challengeHref(item)}"><span>${esc(item.type.replaceAll("-", " "))} · ${esc(item.difficulty)}</span><strong>${esc(item.title)}</strong><small>Practice this topic ↗</small></a>`,
+            `<a class="related-card" href="${questionHref(item)}"><span>${esc(item.source.type === "past-paper" ? "Past paper" : item.source.type === "practice" ? "Supplied practice" : "AcePF practice")} · ${esc(item.difficulty)}</span><strong>${esc(item.title)}</strong><small>Practice this topic ↗</small></a>`,
         )
         .join("")
-    : `<p class="muted">No verified Challenge for this area yet. Try a worked example above.</p>`;
+    : `<p class="muted">No verified question for this area yet. Try a worked example above.</p>`;
   const concepts = note.relatedTopics
     .map((id) => `<span class="concept-chip">${esc(getTopic(id).title)}</span>`)
     .join("");
@@ -110,7 +114,7 @@ export function renderNote(note) {
 }
 
 export function renderLanding() {
-  return `<div class="notes-landing"><span class="eyebrow">PROGRAMMING FUNDAMENTALS</span><h1>Notes for tracing code yourself.</h1><p class="landing-lead">Learn the rule, work through the state change, then test your reasoning in the Visualizer. Three field guides are ready; the remaining curriculum is mapped for future notes.</p><label class="notes-search-label" for="notes-search">Find a field guide</label><input id="notes-search" type="search" placeholder="Search operators, loops, pointers…" autocomplete="off"><div class="note-card-grid" id="note-card-grid">${notes
+  return `<div class="notes-landing"><span class="eyebrow">PROGRAMMING FUNDAMENTALS</span><h1>Notes for tracing code yourself.</h1><p class="landing-lead">Learn the rule, work through the state change, then test your reasoning in the Visualizer. Ten focused guides cover the current Programming Fundamentals curriculum.</p><label class="notes-search-label" for="notes-search">Find a field guide</label><input id="notes-search" type="search" placeholder="Search a topic…" autocomplete="off"><div class="note-card-grid" id="note-card-grid">${notes
     .map(
       (note, i) =>
         `<a class="note-card" data-search="${esc(
@@ -118,16 +122,16 @@ export function renderLanding() {
             .filter((topic) => topic.id.startsWith(`${note.topicId}.`))
             .map((topic) => topic.title)
             .join(" ")}`.toLowerCase(),
-        )}" href="${noteHref(note.topicId)}"><span>0${i + 1} / FIELD GUIDE</span><h2>${esc(note.title)}</h2><p>${esc(note.lead)}</p><strong>Read notes →</strong></a>`,
+        )}" href="${noteHref(note.topicId)}"><span>${String(i + 1).padStart(2, "0")} / FIELD GUIDE</span><h2>${esc(note.title)}</h2><p>${esc(note.lead)}</p><strong>Read notes →</strong></a>`,
     )
     .join(
       "",
-    )}</div><p id="notes-no-results" hidden>No matching field guide yet. Try operators, loops or pointers.</p><h2 class="curriculum-heading">Curriculum map</h2><div class="curriculum-grid">${categories
+    )}</div><p id="notes-no-results" hidden>No matching field guide. Try a broader topic.</p><h2 class="curriculum-heading">Curriculum map</h2><div class="curriculum-grid">${categories
     .map((category, index) => {
       const note = noteForTopic(category.id);
       return note
         ? `<a href="${noteHref(category.id)}"><span>${String(index + 1).padStart(2, "0")}</span><strong>${esc(category.title)}</strong><small>Read guide →</small></a>`
-        : `<div class="pending"><span>${String(index + 1).padStart(2, "0")}</span><strong>${esc(category.title)}</strong><small>Guide planned</small></div>`;
+        : `<div class="pending"><span>${String(index + 1).padStart(2, "0")}</span><strong>${esc(category.title)}</strong><small>Guide unavailable</small></div>`;
     })
     .join("")}</div></div>`;
 }

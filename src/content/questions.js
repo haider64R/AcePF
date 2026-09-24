@@ -1,5 +1,6 @@
 import { validateQuestions } from "./validate.js";
 import { assessmentQuestions } from "./assessment-corpus.js";
+import { authoredQuestions } from "./authored-questions.js";
 
 // This is the single canonical question bank. Challenge Mode selects its
 // authored records; later assessment products can select sourced records too.
@@ -19,6 +20,8 @@ export const questions = [
     source: { type: "authored", name: "Built-in Challenge" },
     status: "verified",
     visualizer: { compatible: true },
+    autoGradable: true,
+    verification: "execution-verified",
     tags: ["challenge"],
   },
   {
@@ -39,6 +42,8 @@ export const questions = [
     source: { type: "authored", name: "Built-in Challenge" },
     status: "verified",
     visualizer: { compatible: true },
+    autoGradable: true,
+    verification: "execution-verified",
     tags: ["challenge"],
   },
   {
@@ -61,9 +66,12 @@ export const questions = [
     source: { type: "authored", name: "Built-in Challenge" },
     status: "verified",
     visualizer: { compatible: true },
+    autoGradable: true,
+    verification: "execution-verified",
     tags: ["challenge"],
   },
   ...assessmentQuestions,
+  ...authoredQuestions,
 ];
 
 validateQuestions(questions);
