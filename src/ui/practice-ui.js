@@ -10,6 +10,7 @@ import {
 } from "../learning/assessment.js";
 import {
   esc,
+  questionCodeBlock,
   questionBody,
   sourceDetail,
   visualizerLink,
@@ -115,7 +116,7 @@ function renderResults() {
     )
     .join(
       "",
-    )}</section><div class="assessment-actions"><button id="again" class="primary">New set</button><a class="button-link" href="./notes.html">Review Notes</a></div><div class="review-list">${result.items.map((item, i) => `<article class="assessment-card"><div class="question-meta"><span>${i + 1} / ${result.items.length}</span><span>${item.correct ? "Correct" : "Incorrect or skipped"}</span><span>${esc(sourceDetail(item.question))}</span></div><h2>${esc(item.question.title)}</h2><p>Your answer: <code>${esc(item.response || "—")}</code></p><p>Expected: <code>${esc(item.question.answer)}</code></p><p>${esc(item.question.explanation)}</p>${visualizerLink(item.question)}</article>`).join("")}</div></main>`;
+    )}</section><div class="assessment-actions"><button id="again" class="primary">New set</button><a class="button-link" href="./notes.html">Review Notes</a></div><div class="review-list">${result.items.map((item, i) => `<article class="assessment-card"><div class="question-meta"><span>${i + 1} / ${result.items.length}</span><span>${item.correct ? "Correct" : "Incorrect or skipped"}</span><span>${esc(sourceDetail(item.question))}</span></div><h2>${esc(item.question.title)}</h2>${questionCodeBlock(item.question)}<p>Your answer: <code>${esc(item.response || "—")}</code></p><p>Expected: <code>${esc(item.question.answer)}</code></p><p>${esc(item.question.explanation)}</p>${visualizerLink(item.question)}</article>`).join("")}</div></main>`;
   app.querySelector("#again").addEventListener("click", () => {
     session = null;
     result = null;

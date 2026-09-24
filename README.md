@@ -65,3 +65,5 @@ The curated [assessment corpus](ASSESSMENT_CORPUS.md) adds 29 traceable question
 ## Dry Run verification
 
 The nested-loop acceptance program produces **68**, with **430 raw events → 68 reasoning steps (84.2% fewer)**. Grouping preserves each raw event and its snapshot. Run `node scripts/trace-report.js` to reproduce the trace counts. See [TESTING.md](TESTING.md) for current suite results, native comparisons, browser coverage and limits.
+
+The V1.1 Notes deepen each guide with worked state traces, rules, traps, and revision prompts. Their taxonomy coverage is recorded in [NOTES_V11_AUDIT.md](NOTES_V11_AUDIT.md). Question code is formatted only for display; the verified source sent to the Visualizer is unchanged. Past Papers cards show available verified questions, while source-inventory details remain in [ASSESSMENT_CORPUS.md](ASSESSMENT_CORPUS.md).

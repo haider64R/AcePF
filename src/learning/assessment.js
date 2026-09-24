@@ -218,3 +218,9 @@ export function pastPaperSets() {
       ),
     }));
 }
+
+// Keep the historical inventory intact; the student catalogue lists only
+// sets with verified questions a learner can actually attempt.
+export function studentPastPaperSets() {
+  return pastPaperSets().filter((set) => set.questions.length > 0);
+}

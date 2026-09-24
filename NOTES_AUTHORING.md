@@ -1,6 +1,6 @@
 # Notes authoring guide
 
-Notes are native website content, not HTML documents. The ten authored guides live in `src/content/notes.js` and `src/content/notes-extra.js`: Fundamentals, Operators & Expressions, Selection, Loops, Functions, Arrays, Pointers, Dynamic Memory, Project Structure and File Handling. Every major canonical category now has a guide.
+Notes are native website content, not HTML documents. The ten authored guides have base records in `src/content/notes.js` and `src/content/notes-extra.js`, with V1.1 depth blocks in `src/content/notes-depth.js`: Fundamentals, Operators & Expressions, Selection, Loops, Functions, Arrays, Pointers, Dynamic Memory, Project Structure and File Handling. Every major canonical category now has a guide, and the exported list follows the category order in `src/content/taxonomy.js`. `NOTES_V11_AUDIT.md` maps taxonomy concepts to their teaching locations.
 
 ## The learning standard
 
@@ -40,7 +40,7 @@ The related Examples and Challenges sections call `queryExamples` and `queryQues
 
 ## Adding or revising a guide
 
-1. Choose its existing canonical `topicId`; add the record to `notes.js` without changing that topic's stable ID.
+1. Choose its existing canonical `topicId`; revise the base record or its depth blocks without changing the stable ID. Category order comes from the taxonomy.
 2. Draft the paper-trace method and one worked state transition first. Then add syntax, traps and revision blocks that help that method.
 3. Use a table, comparison or diagram only when it clarifies the mechanism. Add a new specialized block only with validation, rendering and responsive checks.
 4. Add complete Visualizer samples where observing execution helps; verify output and diagnostics. Keep snippet-only blocks clearly distinct.

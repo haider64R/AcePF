@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { runProject } from "../src/engine/index.js";
-import { notes, questions, examples } from "../src/content/index.js";
+import { notes, questions, examples, categories } from "../src/content/index.js";
 import { validateNotes } from "../src/content/validate.js";
 import {
   noteForTopic,
@@ -24,13 +24,20 @@ const clone = (value) => structuredClone(value);
 
 test("ten authored guides cover every canonical category with valid blocks", () => {
   assert.deepEqual(
-    notes.slice(0, 3).map((note) => note.topicId),
-    ["operators", "loops", "pointers"],
+    notes.map((note) => note.topicId),
+    categories.map((category) => category.id),
   );
   assert.equal(notes.length, 10);
   assert.equal(new Set(notes.map((note) => note.topicId)).size, 10);
   assert.equal(validateNotes(notes, { questions, examples }), true);
   for (const note of notes) {
+    assert.ok(note.sections.length >= 8, `${note.topicId} needs a complete learning path`);
+    assert.ok(note.sections.some((section) => section.kind === "worked-example"), `${note.topicId} needs a worked example`);
+    assert.ok(note.sections.some((section) => section.kind === "details"), `${note.topicId} needs deeper rules`);
+    const teachingWords = note.sections.flatMap((section) => section.blocks)
+      .flatMap((block) => [block.text ?? "", ...(block.items ?? []), ...(block.rows?.flat() ?? [])])
+      .join(" ").trim().split(/\s+/).length;
+    assert.ok(teachingWords >= 500, `${note.topicId} is too brief (${teachingWords} words)`);
     assert.ok(
       note.sections.some((section) => section.kind === "dry-run-rules"),
     );
@@ -87,9 +94,9 @@ test("every runnable note sample executes and matches its authored output", () =
 });
 
 test("related examples and verified questions are derived from shared tags", () => {
-  const operators = relatedForNote(notes[0]);
-  const loops = relatedForNote(notes[1]);
-  const pointers = relatedForNote(notes[2]);
+  const operators = relatedForNote(notes.find((note) => note.topicId === "operators"));
+  const loops = relatedForNote(notes.find((note) => note.topicId === "loops"));
+  const pointers = relatedForNote(notes.find((note) => note.topicId === "pointers"));
   assert.ok(operators.examples.some((item) => item.id === "postfix-order"));
   assert.ok(operators.questions.some((item) => item.id === "postfix-puzzle"));
   assert.ok(loops.examples.some((item) => item.id === "for-phases"));
@@ -121,7 +128,7 @@ test("related examples and verified questions are derived from shared tags", () 
 });
 
 test("sparse related content renders a useful empty state", () => {
-  const sparse = { ...notes[0], topicId: "fundamentals.constants" };
+  const sparse = { ...notes.find((note) => note.topicId === "fundamentals"), topicId: "fundamentals.constants" };
   const html = renderNote(sparse);
   assert.match(html, /No matching examples yet/);
   assert.match(html, /No verified question/);
@@ -139,8 +146,8 @@ test("landing, navigation and specialized blocks render escaped native HTML", ()
     assert.match(html, /note-section/);
     assert.match(html, /aria-label="On this page"/);
   }
-  assert.match(renderNote(notes[2]), /memory-target/);
-  assert.match(renderNote(notes[1]), /note-table-scroll/);
+  assert.match(renderNote(notes.find((note) => note.topicId === "pointers")), /memory-target/);
+  assert.match(renderNote(notes.find((note) => note.topicId === "loops")), /note-table-scroll/);
   assert.match(
     renderBlock(
       { type: "paragraph", text: '<script>alert("x")</script>' },
@@ -171,7 +178,11 @@ test("invalid block forms, duplicate samples and broken references fail validati
   );
   const duplicate = clone(notes);
   duplicate[0].sections[0].blocks.push(
-    clone(duplicate[0].sections[0].blocks.find((item) => item.sampleId)),
+    clone(
+      duplicate[0].sections
+        .flatMap((section) => section.blocks)
+        .find((item) => item.sampleId),
+    ),
   );
   assert.throws(
     () => validateNotes(duplicate, { questions, examples }),

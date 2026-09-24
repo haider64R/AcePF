@@ -11,7 +11,7 @@ import {
   gradeSession,
   mockCandidates,
   moveTo,
-  pastPaperSets,
+  studentPastPaperSets,
   saveAnswer,
   secondsLeft,
   selectQuestions,
@@ -19,7 +19,9 @@ import {
 } from "../learning/assessment.js";
 import {
   esc,
+  paperSummary,
   questionBody,
+  questionCodeBlock,
   sourceDetail,
   visualizerLink,
 } from "./assessment-render.js";
@@ -227,11 +229,11 @@ function renderBank() {
   });
 }
 function renderPapers() {
-  const sets = pastPaperSets();
+  const sets = studentPastPaperSets();
   shell(
     "Past Papers",
-    "Verified questions from supplied FAST exams. Every set is partial; missing questions are never reconstructed.",
-    `<div class="paper-grid">${sets.map((set, i) => `<article class="assessment-card"><div class="question-meta"><span>GENUINE FAST EXAM</span><span>Partial question set</span></div><h2>${esc(set.source.assessment)} · ${esc(set.source.semester ?? "")} ${esc(set.source.year ?? "")}</h2><p>${esc(set.source.document)}</p><p class="muted">${set.questions.length} verified imported question${set.questions.length === 1 ? "" : "s"} · ${esc(set.source.structure)}</p>${set.source.review ? `<p class="muted">${esc(set.source.review)}</p>` : ""}${set.questions.length ? `<button class="primary" data-paper="${i}">Attempt available questions →</button>` : '<p class="availability">No individual questions imported from this document.</p>'}</article>`).join("")}</div>`,
+    "Practice verified questions from genuine supplied FAST assessments. Each catalogue entry is a partial paper, not a complete reconstruction.",
+    `<div class="paper-grid">${sets.map((set, i) => `<article class="assessment-card"><div class="question-meta"><span>Genuine FAST assessment</span><span>Partial paper</span></div><h2>${esc(set.source.assessment)} · ${esc(set.source.semester ?? "")} ${esc(set.source.year ?? "")}</h2><p><strong>${set.questions.length} verified question${set.questions.length === 1 ? "" : "s"} available.</strong></p><p>${esc(paperSummary(set))}</p><p class="availability">Only verified questions from this assessment are available here.</p><p class="paper-source">Source: ${esc(set.source.document)}</p><button class="primary" data-paper="${i}">Attempt available questions →</button></article>`).join("")}</div>`,
   );
   app.querySelectorAll("[data-paper]").forEach((b) =>
     b.addEventListener("click", () => {
@@ -376,7 +378,7 @@ function renderResults() {
           `<p>${esc(categories.find((c) => c.id === id)?.title ?? id)}: ${x.correct}/${x.total}</p>`,
       )
       .join("") || "<p>No automatically graded questions.</p>"
-  }</section><button id="new" class="primary">Return to Exam Mode</button><div class="review-list">${result.items.map((item, i) => `<article class="assessment-card"><div class="question-meta"><span>${i + 1} / ${result.items.length}</span><span>${item.correct === null ? "Manual review" : item.correct ? "Correct" : "Incorrect or unanswered"}</span><span>${esc(sourceDetail(item.question))}</span></div><h2>${esc(item.question.title)}</h2><p>${esc(item.question.question)}</p>${item.question.code ? `<pre class="question-code"><code>${esc(item.question.code)}</code></pre>` : ""}<p>Your answer: <code>${esc(item.response || "—")}</code></p><p>Reference answer: <code>${esc(item.question.answer ?? "Not supplied")}</code></p><p>${esc(item.question.explanation ?? "")}</p>${visualizerLink(item.question)}</article>`).join("")}</div></main>`;
+  }</section><button id="new" class="primary">Return to Exam Mode</button><div class="review-list">${result.items.map((item, i) => `<article class="assessment-card"><div class="question-meta"><span>${i + 1} / ${result.items.length}</span><span>${item.correct === null ? "Manual review" : item.correct ? "Correct" : "Incorrect or unanswered"}</span><span>${esc(sourceDetail(item.question))}</span></div><h2>${esc(item.question.title)}</h2><p>${esc(item.question.question)}</p>${questionCodeBlock(item.question)}<p>Your answer: <code>${esc(item.response || "—")}</code></p><p>Reference answer: <code>${esc(item.question.answer ?? "Not supplied")}</code></p><p>${esc(item.question.explanation ?? "")}</p>${visualizerLink(item.question)}</article>`).join("")}</div></main>`;
   app.querySelector("#new").addEventListener("click", () => {
     session = null;
     persist();

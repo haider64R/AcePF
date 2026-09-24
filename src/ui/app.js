@@ -8,6 +8,7 @@ import {
 import { challenges } from "./challenges.js";
 import { examples } from "../content/index.js";
 import { visualizerTarget } from "../content/notes-routing.js";
+import { displayQuestionCode } from "./code-display.js";
 import { format, label, bytes } from "../engine/types.js";
 const $ = (s) => document.querySelector(s),
   esc = (s) =>
@@ -700,7 +701,9 @@ function showChallenge() {
   const c = challenges[challengeIndex];
   $("#challenge-title").textContent = c.title;
   $("#challenge-question").textContent = c.question;
-  $("#challenge-code").textContent = c.code ?? c.files?.["main.cpp"] ?? "";
+  $("#challenge-code").textContent = c.code
+    ? displayQuestionCode(c)
+    : c.files?.["main.cpp"] ?? "";
   $("#prediction").value = "";
   $("#challenge-feedback").textContent = "";
 }

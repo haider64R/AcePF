@@ -47,7 +47,7 @@ export const additionalNotes = [
           ["Type", "Typical use", "Trace question"],
           [
             [
-              "int / short / long long",
+              "int / short / long",
               "whole numbers",
               "Does division truncate?",
             ],

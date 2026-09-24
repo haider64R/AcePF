@@ -1,12 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { assessmentProfiles, queryQuestions } from "../src/content/index.js";
+import { paperSummary } from "../src/ui/assessment-render.js";
 import {
   createSession,
   gradeSession,
   mockCandidates,
   moveTo,
   pastPaperSets,
+  studentPastPaperSets,
   saveAnswer,
   secondsLeft,
   selectQuestions,
@@ -56,6 +58,20 @@ test("genuine paper sets contain only sourced exam records and identify partial 
     ),
   );
   assert.ok(sets.some((set) => set.questions.length === 0));
+  const studentSets = studentPastPaperSets();
+  assert.equal(studentSets.length, sets.filter((set) => set.questions.length).length);
+  assert.ok(studentSets.every((set) => set.questions.length > 0));
+  assert.ok(
+    sets.some(
+      (set) =>
+        set.questions.length === 0 &&
+        !studentSets.some((item) => item.source.document === set.source.document),
+    ),
+  );
+  for (const set of studentSets) {
+    assert.match(paperSummary(set), /^Available topics: /);
+    assert.doesNotMatch(paperSummary(set), /scan|import|transcri|layout column/i);
+  }
   assert.ok(sets.some((set) => set.questions.some((q) => !q.autoGradable)));
 });
 

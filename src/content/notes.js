@@ -1,6 +1,8 @@
 // Authored teaching records. A sampleId lets the existing Visualizer load a
 // code block; the renderer decides how every block appears.
 import { additionalNotes } from "./notes-extra.js";
+import { categoryOf } from "./taxonomy.js";
+import { deepenNote } from "./notes-depth.js";
 const paragraph = (text) => ({ type: "paragraph", text });
 const code = (sampleId, text, caption) => ({
   type: "code",
@@ -486,4 +488,4 @@ export const notes = [
     ],
   },
   ...additionalNotes,
-];
+].sort((a, b) => categoryOf(a.topicId).order - categoryOf(b.topicId).order).map(deepenNote);

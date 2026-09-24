@@ -370,3 +370,8 @@
 #more-questions {
   margin-top: 20px;
 }
+.paper-source {
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
