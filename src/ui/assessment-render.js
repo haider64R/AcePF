@@ -85,6 +85,6 @@ export function questionCodeBlock(question) {
 
 export function visualizerLink(question, text = "Open in Visualizer ↗") {
   return question.visualizer.compatible
-    ? `<a class="button-link" href="./index.html?question=${encodeURIComponent(question.id)}">${esc(text)}</a>`
+    ? `<a class="button-link" href="./visualizer.html?question=${encodeURIComponent(question.id)}">${esc(text)}</a>`
     : "";
 }

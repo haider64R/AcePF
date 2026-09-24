@@ -26,7 +26,7 @@ The native differential test uses **only curated/generated test fixtures**, in a
 
 ## Use
 
-Open [Home](home.html) to choose a learning path. [Notes](notes.html) contains ten native field guides, one per major curriculum area, with 19 checked runnable examples. [Challenges](practice.html) provides configurable, feedback-first prediction sets. [Exam Mode](exam.html) contains the shared Question Bank, partial genuine past-paper sets and authored practice mocks. [Visualizer](index.html) remains the execution workspace. See [NOTES_AUTHORING.md](NOTES_AUTHORING.md) for the Notes content standard.
+Open [Home](index.html) to choose a learning path. [Notes](notes.html) contains ten native field guides, one per major curriculum area, with 19 checked runnable examples. [Challenges](practice.html) provides configurable, feedback-first prediction sets. [Exam Mode](exam.html) contains the shared Question Bank, partial genuine past-paper sets and authored practice mocks. [Visualizer](visualizer.html) remains the execution workspace. See [NOTES_AUTHORING.md](NOTES_AUTHORING.md) for the Notes content standard.
 
 1. Choose an example, or edit `main.cpp`. Add `.h` and `.cpp` files with the plus button.
 2. Supply a whitespace-separated transcript in Standard input when using `cin`.
@@ -60,7 +60,7 @@ The curated [assessment corpus](ASSESSMENT_CORPUS.md) adds 29 traceable question
 
 ## Static hosting
 
-`npm run build` copies only browser application files and the language contract to `dist/`. Serve that folder with any ordinary static host over HTTP(S); opening `index.html` with `file://` does not support module workers consistently. There is no backend to deploy. The included server binds only to localhost and is intended for local development.
+`npm run build` copies only browser application files and the language contract to `dist/`. Serve that folder with any ordinary static host over HTTP(S); opening the site with `file://` does not support module workers consistently. There is no backend to deploy. The included server binds only to localhost and is intended for local development.
 
 ## Dry Run verification
 

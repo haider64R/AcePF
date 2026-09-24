@@ -23,7 +23,7 @@ let checked = false;
 let result = null;
 let filters = { scopeId: "full-pf", topicId: "", difficulty: "" };
 let count = 5;
-const header = `<header class="topbar"><a class="brand" href="./home.html"><span class="brand-icon">A<span>+</span></span><span>Ace<span class="brand-muted">PF</span></span></a><nav class="product-nav" aria-label="Primary"><a href="./home.html">Home</a><a href="./index.html">Visualizer</a><a href="./notes.html">Notes</a><a href="./practice.html" aria-current="page">Challenges</a><a href="./exam.html">Exam Mode</a><a href="./index.html?examples=1">Examples</a></nav></header>`;
+const header = `<header class="topbar"><a class="brand" href="./index.html"><span class="brand-icon">A<span>+</span></span><span>Ace<span class="brand-muted">PF</span></span></a><nav class="product-nav" aria-label="Primary"><a href="./index.html">Home</a><a href="./visualizer.html">Visualizer</a><a href="./notes.html">Notes</a><a href="./practice.html" aria-current="page">Challenges</a><a href="./exam.html">Exam Mode</a><a href="./visualizer.html?examples=1">Examples</a></nav></header>`;
 function pool() {
   return challengeCandidates({
     scopeId: filters.scopeId,

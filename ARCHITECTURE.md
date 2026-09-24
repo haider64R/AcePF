@@ -65,7 +65,7 @@ Each milestone adds regression and interaction tests, runs the complete suite, c
 | src/ui/notes-render.js / notes-ui.js / notes.css | Pure structured-block renderer, Notes page navigation/search and responsive styles |
 | src/learning/assessment.js | Pure candidate selection, deterministic balancing, sessions, timing and scoring |
 | src/ui/assessment-render.js / practice-ui.js / exam-ui.js | Shared question presentation, Challenges and Exam Mode |
-| home.html / notes.html / practice.html / exam.html / index.html | Static product routes built together |
+| index.html (Home) / visualizer.html / notes.html / practice.html / exam.html | Static product routes built together |
 
 The legacy quick-challenge dialog still selects its three tagged records and loads a normal Visualizer recording. Challenge V2 selects verified auto-gradable questions from the same bank using canonical scope, topic and difficulty filters. Exam Mode also consumes that bank; no question is duplicated into a page component. [CONTENT_MODEL.md](CONTENT_MODEL.md) defines the schema and authoring rules.
 

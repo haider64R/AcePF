@@ -30,7 +30,7 @@ Reusable blocks:
 
 Content is escaped by `src/ui/notes-render.js`, so write plain text and C++ strings, not markup. To add a specialized block, extend its validator and renderer together, then add a focused rendering/invalid-data test and check it at narrow width. The diagram block is deliberately conceptual, not a runtime memory dump.
 
-For a runnable block, choose a `sampleId` unique **within that note** and include a complete, deterministic `main.cpp` program in `text`. The renderer generates `index.html?note=<note-id>&sample=<sample-id>`. `src/content/notes-routing.js` resolves that pair from checked-in content; the Visualizer loads the exact code into its normal editor and worker. No code is placed in the URL, and Notes does not execute C++ itself. Run each sample through `runProject`, compare its output to the caption and, when meaningful, native C++17. A snippet without `sampleId` stays explanatory.
+For a runnable block, choose a `sampleId` unique **within that note** and include a complete, deterministic `main.cpp` program in `text`. The renderer generates `visualizer.html?note=<note-id>&sample=<sample-id>`. `src/content/notes-routing.js` resolves that pair from checked-in content; the Visualizer loads the exact code into its normal editor and worker. No code is placed in the URL, and Notes does not execute C++ itself. Run each sample through `runProject`, compare its output to the caption and, when meaningful, native C++17. A snippet without `sampleId` stays explanatory.
 
 ## Relationships and navigation
 

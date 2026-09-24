@@ -47,7 +47,7 @@ let session = restore();
 let reveal = false;
 let visibleCount = 12;
 let message = "";
-const header = `<header class="topbar"><a class="brand" href="./home.html"><span class="brand-icon">A<span>+</span></span><span>Ace<span class="brand-muted">PF</span></span></a><nav class="product-nav" aria-label="Primary"><a href="./home.html">Home</a><a href="./index.html">Visualizer</a><a href="./notes.html">Notes</a><a href="./practice.html">Challenges</a><a href="./exam.html" aria-current="page">Exam Mode</a><a href="./index.html?examples=1">Examples</a></nav></header>`;
+const header = `<header class="topbar"><a class="brand" href="./index.html"><span class="brand-icon">A<span>+</span></span><span>Ace<span class="brand-muted">PF</span></span></a><nav class="product-nav" aria-label="Primary"><a href="./index.html">Home</a><a href="./visualizer.html">Visualizer</a><a href="./notes.html">Notes</a><a href="./practice.html">Challenges</a><a href="./exam.html" aria-current="page">Exam Mode</a><a href="./visualizer.html?examples=1">Examples</a></nav></header>`;
 const activeHeader = `<header class="topbar"><span class="brand"><span class="brand-icon">A<span>+</span></span><span>Ace<span class="brand-muted">PF</span></span></span><span class="course">INDEPENDENT ATTEMPT</span></header>`;
 function persist() {
   try {

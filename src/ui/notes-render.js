@@ -23,13 +23,13 @@ export function noteHref(topicId) {
   return href("./notes.html", { topic: topicId });
 }
 export function sampleHref(note, block) {
-  return href("./index.html", { note: note.id, sample: block.sampleId });
+  return href("./visualizer.html", { note: note.id, sample: block.sampleId });
 }
 export function exampleHref(example) {
-  return href("./index.html", { example: example.id });
+  return href("./visualizer.html", { example: example.id });
 }
 export function challengeHref(question) {
-  return href("./index.html", { challenge: question.id });
+  return href("./visualizer.html", { challenge: question.id });
 }
 export function questionHref(question) {
   return question.tags?.includes("challenge") && question.source.type === "authored"
